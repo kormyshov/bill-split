@@ -1,0 +1,13 @@
+@import 'https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css';
+
+body {
+  font: 16px sans-serif;
+  background-color: var(--sl-color-neutral-0);
+  color: var(--sl-color-neutral-900);
+  padding: 1rem;
+}
+
+a {
+  color: #000 !important;
+  text-decoration: none
+}
