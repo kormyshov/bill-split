@@ -30,43 +30,47 @@ export default function NewGroup() {
 
   return (
     <>
-      <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/')} />
-      <h1>Create new group</h1>
-      <SlInput
-        placeholder="Group name"
-        value={groupName}
-        onSlInput={(e)=>setGroupName((e.target as HTMLInputElement).value)}
-        style={{ width: '100%', marginBottom: '1rem' }}
-        autoFocus
-      />
-      <SlButton
-        variant="success" 
-        style={{ width: '100%', marginBottom: '1rem' }} 
-        onClick={()=>handleCreateGroup(groupName)}
-        {...(groupName.trim() === '' ? { disabled: true } : { disabled: false })}
-      >
-        Create
-      </SlButton>
+      <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', boxSizing: 'border-box', alignItems: 'center', display: 'flex' }}>
+        <div style={{ padding: '1rem', width: '100%' }}>
+          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem', zIndex: '1000', position: 'absolute', top: '1rem', left: '1rem' }} onClick={()=>navigate('/')} />
+          <h1>Create new group</h1>
+          <SlInput
+            placeholder="Group name"
+            value={groupName}
+            onSlInput={(e)=>setGroupName((e.target as HTMLInputElement).value)}
+            style={{ width: '100%', marginBottom: '1rem' }}
+            autoFocus
+          />
+          <SlButton
+            variant="success" 
+            style={{ width: '100%', marginBottom: '1rem' }} 
+            onClick={()=>handleCreateGroup(groupName)}
+            {...(groupName.trim() === '' ? { disabled: true } : { disabled: false })}
+          >
+            Create
+          </SlButton>
 
-      <SlDivider style={{ width: '40%', float: 'left', marginTop: '2rem', borderWidth: '2px' }} />
-      <h4 style={{ width: '20%', float: 'left', textAlign: 'center' }}>or</h4>
-      <SlDivider style={{ width: '40%', float: 'right', marginTop: '2rem', borderWidth: '2px' }} />
+          <SlDivider style={{ width: '40%', float: 'left', marginTop: '2rem', borderWidth: '2px' }} />
+          <h4 style={{ width: '20%', float: 'left', textAlign: 'center' }}>or</h4>
+          <SlDivider style={{ width: '40%', float: 'right', marginTop: '2rem', borderWidth: '2px' }} />
 
-      <h1 style={{ clear: 'both', marginTop: '5rem' }}>Join to existed group</h1>
-      <SlInput
-        placeholder="Group token"
-        value={groupToken}
-        onSlInput={(e)=>setGroupToken((e.target as HTMLInputElement).value)}
-        style={{ width: '100%', marginBottom: '1rem' }}
-      />
-      <SlButton 
-        variant="success" 
-        style={{ width: '100%', marginBottom: '1rem' }} 
-        onClick={()=>handleJoinToGroup(groupToken)}
-        {...(groupToken.trim() === '' || groupList.containsToken(groupToken) ? { disabled: true } : { disabled: false })}
-      >
-        Join
-      </SlButton>
+          <h1 style={{ clear: 'both', marginTop: '5rem' }}>Join to existed group</h1>
+          <SlInput
+            placeholder="Group token"
+            value={groupToken}
+            onSlInput={(e)=>setGroupToken((e.target as HTMLInputElement).value)}
+            style={{ width: '100%', marginBottom: '1rem' }}
+          />
+          <SlButton 
+            variant="success" 
+            style={{ width: '100%', marginBottom: '1rem' }} 
+            onClick={()=>handleJoinToGroup(groupToken)}
+            {...(groupToken.trim() === '' || groupList.containsToken(groupToken) ? { disabled: true } : { disabled: false })}
+          >
+            Join
+          </SlButton>
+        </div>
+      </div>
     </>
   );
 }
