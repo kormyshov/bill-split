@@ -1,7 +1,6 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import SlCard from '@shoelace-style/shoelace/dist/react/card';
 import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 
 import { GroupListContext } from '../../app/App.tsx';
