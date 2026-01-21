@@ -54,7 +54,7 @@ export default function NewGroup() {
 
       <h1 style={{ clear: 'both', marginTop: '5rem' }}>Join to existed group</h1>
       <SlInput
-        placeholder="Group ID"
+        placeholder="Group token"
         value={groupToken}
         onSlInput={(e)=>setGroupToken((e.target as HTMLInputElement).value)}
         style={{ width: '100%', marginBottom: '1rem' }}
