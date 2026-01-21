@@ -16,6 +16,8 @@ import { TUser } from '../../entities/types/user/user';
 import { TUserList } from '../../entities/types/user/user_list';
 import { changeGroupName, leaveGroup } from '../../entities/upload/groups';
 
+import { GRADIENTS } from '../../entities/data/gradients.ts';
+
 
 export default function GroupSetting() {
 
@@ -73,7 +75,9 @@ export default function GroupSetting() {
 
   return (
     <>
-      <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/groups/' + groupId)} />
+      <div style={{ background: GRADIENTS[group.getId() % 15], position: 'absolute', top: 0, left: 0, width: '100%', height: '20%', boxSizing: 'border-box', alignItems: 'center', display: 'flex' }}>
+        <div style={{ padding: '1rem', width: '100%' }}>
+          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem', position: 'absolute', top: '1rem', left: '1rem' }} onClick={()=>navigate('/groups/' + groupId)} />
       
       <h1 style={{ marginBottom: '0px' }}>
         {groupName}
@@ -93,37 +97,40 @@ export default function GroupSetting() {
           Save
         </SlButton>
       </SlDialog>
+        </div>
+      </div>
 
-      <TelegramShareButton
-        url={"https://t.me/mrBillSplitBot"}
-        title={"\nStart bot Mr. Bill Split and join to group \"" + groupName + "\" using this token: " + group.getToken() + "\n"}
-        style={{ width: '100%' }}
-      >
-        <SlButton variant="primary" style={{ marginTop: '1rem', marginBottom: '1rem', width: '100%' }}>
-          Invite members via Telegram
+      <div style={{ position: 'absolute', top: '20%', left: 0, width: '100%', height: '80%', boxSizing: 'border-box', padding: '1rem' }}>
+        <TelegramShareButton
+          url={"https://t.me/mrBillSplitBot"}
+          title={"\nStart bot Mr. Bill Split and join to group \"" + groupName + "\" using this token: " + group.getToken() + "\n"}
+          style={{ width: '100%' }}
+        >
+          <SlButton variant="primary" style={{ marginTop: '1rem', marginBottom: '1rem', width: '100%' }}>
+            Invite members via Telegram
+          </SlButton>
+        </TelegramShareButton>
+
+        <h3>
+          Group members
+        </h3>
+        <ul>
+          {groupMembers.getItems().map((member: TUser) => (
+            <li key={member.getTelegramId()}>
+              {member.getFirstName()} {member.getLastName()}
+            </li>
+          ))}
+        </ul>
+
+        <SlButton 
+          variant="danger" 
+          style={{ marginTop: '2rem', width: '100%' }} 
+          onClick={() => handleLeaveGroup()} 
+          outline
+        >
+          Leave group
         </SlButton>
-      </TelegramShareButton>
-
-      <h3>
-        Group members
-      </h3>
-      <ul>
-        {groupMembers.getItems().map((member: TUser) => (
-          <li key={member.getTelegramId()}>
-            {member.getFirstName()} {member.getLastName()}
-          </li>
-        ))}
-      </ul>
-
-      <SlButton 
-        variant="danger" 
-        style={{ marginTop: '2rem', width: '100%' }} 
-        onClick={() => handleLeaveGroup()} 
-        outline
-      >
-        Leave group
-      </SlButton>
-
+      </div>
     </>
   );
 }

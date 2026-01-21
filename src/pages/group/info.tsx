@@ -13,6 +13,7 @@ import { TGroup } from '../../entities/types/group/group';
 import { TExpenseList } from '../../entities/types/expense/expense_list';
 import { TExpense } from '../../entities/types/expense/expense';
 
+import { GRADIENTS } from '../../entities/data/gradients.ts';
 
 export default function GroupInfo() {
 
@@ -63,16 +64,21 @@ export default function GroupInfo() {
 
   return (
     <>
-      <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/')} />
-      <SlIconButton name="gear" label="Settings" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/' + groupId + '/settings')} />
-      <h1 style={{ marginBottom: '0px' }}>{group.getName()}</h1>
-      <SlBadge variant="neutral">{group.getCount()} member(s)</SlBadge>
+      <div style={{ background: GRADIENTS[group.getId() % 15], position: 'absolute', top: 0, left: 0, width: '100%', height: '20%', boxSizing: 'border-box', alignItems: 'center', display: 'flex' }}>
+        <div style={{ padding: '1rem', width: '100%' }}>
+          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem', position: 'absolute', top: '1rem', left: '1rem' }} onClick={()=>navigate('/')} />
+          <SlIconButton name="gear" label="Settings" style={{ fontSize: '1.5rem', position: 'absolute', top: '1rem', right: '1rem' }} onClick={()=>navigate('/groups/' + groupId + '/settings')} />
+          <h1 style={{ marginBottom: '0px' }}>{group.getName()}</h1>
+          <SlBadge variant="neutral">{group.getCount()} member(s)</SlBadge>
+        </div>
+      </div>
 
-      <br /><br />
-      <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>navigate('/groups/' + groupId + '/new_expense')}>Add expense</SlButton>
+      <div style={{ position: 'absolute', top: '20%', left: 0, width: '100%', height: '80%', boxSizing: 'border-box', padding: '1rem' }}>
+        <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>navigate('/groups/' + groupId + '/new_expense')}>Add expense</SlButton>
 
-      <div style={{ marginTop: '2rem' }}>
-        {lst}
+        <div style={{ marginTop: '2rem' }}>
+          {lst}
+        </div>
       </div>
     </>
   );

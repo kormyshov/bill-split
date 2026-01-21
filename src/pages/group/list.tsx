@@ -6,6 +6,8 @@ import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 
 import { GroupListContext } from '../../app/App.tsx';
 
+import { GRADIENTS } from '../../entities/data/gradients.ts';
+
 export default function GroupList() {
 
   const navigate = useNavigate();
@@ -15,10 +17,10 @@ export default function GroupList() {
   const lst = groupList.getItems().map(
     (group) => 
       <Link key={group.getId()} to={`/groups/${group.getId()}`}>
-        <SlCard style={{ width: '100%', marginBottom: '1rem' }}>
-          <b>{group.getName()}</b><br/>
-          <span>{group.getCount()} member(s)</span>
-        </SlCard>
+        <div style={{ background: GRADIENTS[group.getId() % 15], padding: '1rem', marginBottom: '1rem', border: '0px', borderRadius: '0.2rem' }} >
+            <b>{group.getName()}</b><br/>
+            <span>{group.getCount()} member(s)</span>
+        </div>
       </Link>
   );
 

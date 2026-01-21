@@ -61,14 +61,18 @@ export default function ExpenseInfo() {
 
   return (
     <>
-      <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/groups/' + groupId)} />
-      <h1 style={{ marginBottom: '0px' }}>
-        <span>{expenseName}</span>
-        <span style={{ float: 'right' }}>{expenseTotalAmount}</span>
-      </h1>
-      <span>paid by {paidBy}</span><br />
-      <span>at <SlFormatDate month="long" day="numeric" year="numeric" date={createdAt}/></span>
-      <div style={{ marginTop: '2rem' }}>
+      <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', position: 'absolute', top: 0, left: 0, width: '100%', height: '20%', boxSizing: 'border-box', alignItems: 'center', display: 'flex' }}>
+        <div style={{ padding: '1rem', width: '100%' }}>
+          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem', position: 'absolute', top: '1rem', left: '1rem' }} onClick={()=>navigate('/groups/' + groupId)} />
+          <h1 style={{ marginBottom: '0px' }}>
+            <span>{expenseName}</span>
+            <span style={{ float: 'right' }}>{expenseTotalAmount}</span>
+          </h1>
+          <span>paid by {paidBy}</span><br />
+          <span>at <SlFormatDate month="long" day="numeric" year="numeric" date={createdAt}/></span>
+        </div>
+      </div>
+      <div style={{ position: 'absolute', top: '20%', left: 0, width: '100%', height: '80%', boxSizing: 'border-box', padding: '1rem' }}>
         {lst}
       </div>
     </>
