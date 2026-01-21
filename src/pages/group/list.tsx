@@ -24,9 +24,15 @@ export default function GroupList() {
 
   return (
     <>
-      <SlIconButton name="person-plus" label="Add group" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/new')} />
-      <h1 style={{ clear: 'both' }}>Your groups</h1>
-      {lst}
+      <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', position: 'absolute', top: 0, left: 0, width: '100%', height: '20%', boxSizing: 'border-box', alignItems: 'center', display: 'flex' }}>
+        <div style={{ padding: '1rem', width: '100%' }}>
+          <SlIconButton name="person-plus" label="Add group" style={{ fontSize: '1.5rem', position: 'absolute', top: '1rem', right: '1rem' }} onClick={()=>navigate('/groups/new')} />
+          <h1 style={{ clear: 'both' }}>Your groups</h1>
+        </div>
+      </div>
+      <div style={{ position: 'absolute', top: '20%', left: 0, width: '100%', height: '80%', boxSizing: 'border-box', padding: '1rem' }}>
+        {lst}
+      </div>
     </>
   );
 
