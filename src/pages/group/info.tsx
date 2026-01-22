@@ -64,19 +64,19 @@ export default function GroupInfo() {
 
   return (
     <>
-      <div style={{ background: GRADIENTS[group.getId() % 15], position: 'absolute', top: 0, left: 0, width: '100%', height: '20%', boxSizing: 'border-box', alignItems: 'center', display: 'flex' }}>
-        <div style={{ padding: '1rem', width: '100%' }}>
-          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem', position: 'absolute', top: '1rem', left: '1rem' }} onClick={()=>navigate('/')} />
-          <SlIconButton name="gear" label="Settings" style={{ fontSize: '1.5rem', position: 'absolute', top: '1rem', right: '1rem' }} onClick={()=>navigate('/groups/' + groupId + '/settings')} />
+      <div style={{ background: GRADIENTS[group.getId() % 15], width: '100%', height: '10rem', boxSizing: 'border-box' }}>
+        <div style={{ padding: '1rem' }}>
+          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/')} />
+          <SlIconButton name="gear" label="Settings" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/' + groupId + '/settings')} />
           <h1 style={{ marginBottom: '0px' }}>{group.getName()}</h1>
           <SlBadge variant="neutral">{group.getCount()} member(s)</SlBadge>
         </div>
       </div>
 
-      <div style={{ position: 'absolute', top: '20%', left: 0, width: '100%', height: '80%', boxSizing: 'border-box', padding: '1rem' }}>
+      <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
         <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>navigate('/groups/' + groupId + '/new_expense')}>Add expense</SlButton>
 
-        <div style={{ marginTop: '2rem' }}>
+        <div style={{ marginTop: '1rem' }}>
           {lst}
         </div>
       </div>

@@ -92,7 +92,7 @@ export default function NewExpense() {
 
   return (
     <>
-      <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', position: 'absolute', top: 0, left: 0, width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
       <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/groups/' + groupId)} />
       <h1>Add expense</h1>
@@ -121,7 +121,7 @@ export default function NewExpense() {
         </div>
       </div>
 
-      <div style={{ position: 'absolute', top: '30%', left: 0, width: '100%', height: '80%', boxSizing: 'border-box', padding: '1rem' }}>
+      <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
       <SlTabGroup
         {...(expenseName === '' || expenseAmount === 0 ? 
           { style:{ display: 'none' } } : 

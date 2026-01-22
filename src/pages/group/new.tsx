@@ -30,9 +30,9 @@ export default function NewGroup() {
 
   return (
     <>
-      <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', boxSizing: 'border-box', alignItems: 'center', display: 'flex' }}>
-        <div style={{ padding: '1rem', width: '100%' }}>
-          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem', zIndex: '1000', position: 'absolute', top: '1rem', left: '1rem' }} onClick={()=>navigate('/')} />
+      <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', width: '100%', height: '100vh', boxSizing: 'border-box' }}>
+        <div style={{ padding: '1rem' }}>
+          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/')} />
           <h1>Create new group</h1>
           <SlInput
             placeholder="Group name"
