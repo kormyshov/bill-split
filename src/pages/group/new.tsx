@@ -33,7 +33,7 @@ export default function NewGroup() {
       <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', width: '100%', height: '100vh', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
           <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/')} />
-          <h1>Create new group</h1>
+          <h2>Create new group</h2>
           <SlInput
             placeholder="Group name"
             value={groupName}
@@ -54,7 +54,7 @@ export default function NewGroup() {
           <h4 style={{ width: '20%', float: 'left', textAlign: 'center' }}>or</h4>
           <SlDivider style={{ width: '40%', float: 'right', marginTop: '2rem', borderWidth: '2px' }} />
 
-          <h1 style={{ clear: 'both', marginTop: '5rem' }}>Join to existed group</h1>
+          <h2 style={{ clear: 'both', marginTop: '5rem' }}>Join to existed group</h2>
           <SlInput
             placeholder="Group token"
             value={groupToken}

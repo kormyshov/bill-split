@@ -79,10 +79,10 @@ export default function GroupSetting() {
         <div style={{ padding: '1rem' }}>
           <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/groups/' + groupId)} />
       
-      <h1 style={{ marginBottom: '0px' }}>
+      <h2 style={{ marginBottom: '0px' }}>
         {groupName}
-        <SlIconButton name="pencil" label="Edit" style={{ fontSize: '1.5rem' }} onClick={() => handleOpenDialog()} />
-      </h1>
+        <SlIconButton name="pencil" label="Edit" style={{ fontSize: '1rem' }} onClick={() => handleOpenDialog()} />
+      </h2>
 
       <SlDialog label="Edit group name" open={dialogOpen} onSlAfterHide={() => setDialogOpen(false)}>
         <SlInput

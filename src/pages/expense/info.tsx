@@ -64,10 +64,10 @@ export default function ExpenseInfo() {
       <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', width: '100%', height: '12rem', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
           <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/groups/' + groupId)} />
-          <h1 style={{ marginBottom: '0px' }}>
+          <h2 style={{ marginBottom: '0px' }}>
             <span>{expenseName}</span>
             <span style={{ float: 'right' }}>{expenseTotalAmount}</span>
-          </h1>
+          </h2>
           <span>paid by {paidBy}</span><br />
           <span>at <SlFormatDate month="long" day="numeric" year="numeric" date={createdAt}/></span>
         </div>

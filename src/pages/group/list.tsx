@@ -28,7 +28,7 @@ export default function GroupList() {
       <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', top: 0, left: 0, width: '100%', height: '10rem', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
           <SlIconButton name="person-plus" label="Add group" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/new')} />
-          <h1 style={{ clear: 'both' }}>Your groups</h1>
+          <h2 style={{ clear: 'both' }}>Your groups</h2>
         </div>
       </div>
       <div style={{ left: 0, width: '100%', boxSizing: 'border-box', padding: '1rem' }}>

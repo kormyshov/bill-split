@@ -95,7 +95,7 @@ export default function NewExpense() {
       <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
       <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/groups/' + groupId)} />
-      <h1>Add expense</h1>
+      <h2>Add expense</h2>
       <SlInput
         placeholder="Expense name"
         value={expenseName}

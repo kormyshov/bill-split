@@ -68,7 +68,7 @@ export default function GroupInfo() {
         <div style={{ padding: '1rem' }}>
           <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/')} />
           <SlIconButton name="gear" label="Settings" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/' + groupId + '/settings')} />
-          <h1 style={{ marginBottom: '0px' }}>{group.getName()}</h1>
+          <h2 style={{ marginBottom: '0px' }}>{group.getName()}</h2>
           <SlBadge variant="neutral">{group.getCount()} member(s)</SlBadge>
         </div>
       </div>
