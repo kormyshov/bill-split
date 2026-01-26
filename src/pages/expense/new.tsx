@@ -84,7 +84,7 @@ export default function NewExpense() {
         style={{ width: '60%', marginBottom: '1rem', display: 'inline-block' }}
       />
       <SlSelect
-        value="1"
+        value={expenseCurrency}
         style={{ width: '40%', marginBottom: '1rem', display: 'inline-block' }}
         onSlChange={(e)=>setExpenseCurrency((e.target as HTMLSelectElement).value)}
       >
