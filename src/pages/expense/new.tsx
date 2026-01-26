@@ -2,21 +2,19 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import SlInput from '@shoelace-style/shoelace/dist/react/input';
-import SlButton from '@shoelace-style/shoelace/dist/react/button';
 import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlOption from '@shoelace-style/shoelace/dist/react/option';
 import SlSelect from '@shoelace-style/shoelace/dist/react/select';
 import SlTab from '@shoelace-style/shoelace/dist/react/tab';
 import SlTabGroup from '@shoelace-style/shoelace/dist/react/tab-group';
 import SlTabPanel from '@shoelace-style/shoelace/dist/react/tab-panel';
-import SlCheckbox from '@shoelace-style/shoelace/dist/react/checkbox';
 
 import { getCommand } from '../../entities/upload/common';
-import { createEquallyExpense } from '../../entities/upload/expenses.ts';
 
 import { TUser } from '../../entities/types/user/user';
 import { TUserList } from '../../entities/types/user/user_list';
 import { CURRENCIES } from '../../entities/data/currencies';
+import EquallyExpenseTab from '../../widgets/tabs/equally_expense.tsx';
 
 
 export default function NewExpense() {
@@ -53,28 +51,6 @@ export default function NewExpense() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [checkedList, setCheckedList] = useState<number[]>(groupMembers.getItems().map((member) => member.getId()));
-
-  const handleChangeCheck = (checked: boolean, user_id: number) => {
-    if (checked) {
-      setCheckedList([...checkedList, user_id]);
-    } else {
-      setCheckedList(checkedList.filter((id) => id !== user_id));
-    }
-  }
-
-  const checkList = groupMembers
-    .getItems()
-    .map((member: TUser) => (
-      <SlCheckbox
-
-        onSlChange={(e) => {handleChangeCheck((e.target as HTMLInputElement).checked, member.getId())}}
-        style={{ display: 'block', marginBottom: '0.5rem' }}
-      >
-        {member.getFirstName()} {member.getLastName()}
-      </SlCheckbox>
-    ))
-
   const currencyOptions = Object.entries(CURRENCIES).map(
     ([key, value]) => 
       <SlOption
@@ -85,10 +61,6 @@ export default function NewExpense() {
       </SlOption>
   );
 
-  const handleCreateEquallyExpense = () => {
-    createEquallyExpense(groupId, expenseName, expenseAmount, expenseCurrency, checkedList);
-    navigate('/groups/' + groupId);
-  }
 
   return (
     <>
@@ -135,20 +107,13 @@ export default function NewExpense() {
           Custom
         </SlTab>
 
-        <SlTabPanel name="equally">
-            <h3>Select members involved in expense:</h3>
-            <ul>
-              {checkList}
-            </ul>
-            <SlButton 
-              variant="success" 
-              style={{ width: '100%', marginTop: '1rem' }} 
-              onClick={()=>{handleCreateEquallyExpense()}}
-              {...(checkedList.length === 0 ? { disabled: true } : { disabled: false })}
-            >
-              Split by {(expenseAmount / checkedList.length).toFixed(2)} {CURRENCIES[expenseCurrency]}
-            </SlButton>
-        </SlTabPanel>
+        <EquallyExpenseTab 
+          groupId={groupId}
+          groupMembers={groupMembers} 
+          expenseName={expenseName} 
+          expenseAmount={expenseAmount} 
+          expenseCurrency={expenseCurrency} 
+        />
 
         <SlTabPanel name="custom">To be continue</SlTabPanel>
       </SlTabGroup>
