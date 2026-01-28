@@ -23,4 +23,13 @@ export class TUserList {
         this.items.push(item);
     }
 
+    public getItemById(id: number): TUser | null {
+        for (let item of this.items) {
+            if (item.getId() === id) {
+                return item;
+            }
+        }
+        return null;
+    }
+
 }

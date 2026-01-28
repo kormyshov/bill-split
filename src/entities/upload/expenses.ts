@@ -14,3 +14,17 @@ export const createEquallyExpense = (groupId: string, expenseName: string, expen
         ))
     );
 }
+
+export const createCustomExpense = (groupId: string, expenseName: string, expenseAmount: number, expenseCurrency: string, totals: any[]) => {
+    fetch(getCommand("expenses/create_custom"), getRequestOptions(
+        JSON.stringify(
+            {
+                group_id: groupId,
+                expense_name: expenseName,
+                expense_amount: expenseAmount,
+                expense_currency: Number(expenseCurrency),
+                totals: totals
+            }
+        ))
+    );
+}

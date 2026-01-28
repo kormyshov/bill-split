@@ -15,6 +15,7 @@ import { TUser } from '../../entities/types/user/user';
 import { TUserList } from '../../entities/types/user/user_list';
 import { CURRENCIES } from '../../entities/data/currencies';
 import EquallyExpenseTab from '../../widgets/tabs/equally_expense.tsx';
+import CustomExpenseTab from '../../widgets/tabs/custom_expense.tsx';
 
 
 export default function NewExpense() {
@@ -115,7 +116,13 @@ export default function NewExpense() {
           expenseCurrency={expenseCurrency} 
         />
 
-        <SlTabPanel name="custom">To be continue</SlTabPanel>
+        <CustomExpenseTab 
+          groupId={groupId}
+          groupMembers={groupMembers} 
+          expenseName={expenseName}
+          expenseAmount={expenseAmount}
+          expenseCurrency={expenseCurrency}
+        />
       </SlTabGroup>
       </div>
     </>
