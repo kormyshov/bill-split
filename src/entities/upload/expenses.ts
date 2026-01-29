@@ -28,3 +28,7 @@ export const createCustomExpense = (groupId: string, expenseName: string, expens
         ))
     );
 }
+
+export const deleteExpense = (expenseId: number) => {
+    fetch(getCommand("expenses/delete"), getRequestOptions(expenseId));
+}

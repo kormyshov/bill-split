@@ -4,10 +4,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlCard from '@shoelace-style/shoelace/dist/react/card';
 import SlFormatDate from '@shoelace-style/shoelace/dist/react/format-date';
+import SlButton from '@shoelace-style/shoelace/dist/react/button';
 
 import { TDebtList } from '../../entities/types/debt/debt_list';
 import { TDebt } from '../../entities/types/debt/debt';
 import { getCommand } from '../../entities/upload/common';
+import { deleteExpense } from '../../entities/upload/expenses';
 
 
 export default function ExpenseInfo() {
@@ -54,6 +56,11 @@ export default function ExpenseInfo() {
       </SlCard>
   );
 
+  const handleDeleteExpense = () => {
+    deleteExpense(Number(expenseId));
+    navigate('/groups/' + groupId);
+  }
+
   const expenseName = expenseDebts.getItems()[0]?.getExpenseName() || 'Expense Info';
   const expenseTotalAmount = expenseDebts.getItems()[0]?.getTotalAmountFormatted() || '';
   const paidBy = expenseDebts.getItems()[0]?.getPaidByFirstAndLastName() || '';
@@ -74,6 +81,14 @@ export default function ExpenseInfo() {
       </div>
       <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
         {lst}
+        <SlButton 
+          variant="danger" 
+          style={{ marginTop: '2rem', width: '100%' }} 
+          onClick={() => handleDeleteExpense()} 
+          outline
+        >
+          Delete expense
+        </SlButton>
       </div>
     </>
   );
