@@ -32,7 +32,15 @@ export default function GroupList() {
         </div>
       </div>
       <div style={{ left: 0, width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
-        {lst}
+        { lst.length > 0 ?
+          lst :
+          <div style={{ padding: '1rem', marginTop: '-8rem', textAlign: 'center' }}>
+            <img src='arrow.png' width='60%' style={{ marginLeft: '10rem' }} /><br/>
+            You have no groups yet.<br/><br/>
+            Click the button to create your first group<br/>
+            or join an existing one.
+          </div>
+        }
       </div>
     </>
   );
