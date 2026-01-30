@@ -137,6 +137,7 @@ export default function CustomExpenseTab(props: any) {
             Split expense
           </SlButton>
         </div>
+        <div style={{ height: '5rem' }}></div>
 
       </SlTabPanel>
     </>
