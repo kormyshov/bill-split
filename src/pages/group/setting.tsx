@@ -11,6 +11,7 @@ import SlInput from '@shoelace-style/shoelace/dist/react/input';
 import { getCommand } from '../../entities/upload/common';
 
 import { GroupListContext } from '../../app/App';
+import { GroupUpdateFlagContext } from '../../app/App';
 import { TGroup } from '../../entities/types/group/group';
 import { TUser } from '../../entities/types/user/user';
 import { TUserList } from '../../entities/types/user/user_list';
@@ -25,6 +26,8 @@ export default function GroupSetting() {
   const { groupList } = useContext(GroupListContext);
   const group: TGroup = groupList.getItemById(Number(groupId)) as TGroup;
 
+  const { setGroupUpdateFlag } = useContext(GroupUpdateFlagContext);
+
   const [groupName, setGroupName] = useState(group.getName());
   const [dialogGroupName, setDialogGroupName] = useState(group.getName());
 
@@ -36,6 +39,7 @@ export default function GroupSetting() {
     changeGroupName(Number(groupId), groupName, group.getCreatedAt(), group.getCreatedBy());
     setDialogOpen(false);
     setGroupName(groupName);
+    setGroupUpdateFlag(true);
   }
 
   const handleOpenDialog = () => {
@@ -45,6 +49,7 @@ export default function GroupSetting() {
 
   const handleLeaveGroup = () => {
     leaveGroup(Number(groupId));
+    setGroupUpdateFlag(true);
     navigate('/');
   }
 

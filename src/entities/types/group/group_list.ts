@@ -40,4 +40,8 @@ export class TGroupList {
         }
         return false;
     }
+
+    public clear(): void {
+        this.items = new Array<TGroup>();
+    }
 }

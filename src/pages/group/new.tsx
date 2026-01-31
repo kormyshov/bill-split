@@ -8,6 +8,7 @@ import SlDivider from '@shoelace-style/shoelace/dist/react/divider';
 
 import { createGroup, joinToGroup } from '../../entities/upload/groups.ts';
 import { GroupListContext } from '../../app/App.tsx';
+import { GroupUpdateFlagContext } from '../../app/App.tsx';
 
 
 export default function NewGroup() {
@@ -17,14 +18,17 @@ export default function NewGroup() {
   const [groupToken, setGroupToken] = useState('');
 
   const { groupList } = useContext(GroupListContext);
+  const { setGroupUpdateFlag } = useContext(GroupUpdateFlagContext);
 
   const handleCreateGroup = (groupName: string) => {
     createGroup(groupName);
+    setGroupUpdateFlag(true);
     navigate('/');
   }
 
   const handleJoinToGroup = (groupToken: string) => {
     joinToGroup(groupToken);
+    setGroupUpdateFlag(true);
     navigate('/');
   }
 

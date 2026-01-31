@@ -27,10 +27,20 @@ export const GroupListContext = React.createContext(
   }
 );
 
+export const GroupUpdateFlagContext = React.createContext(
+  {
+    groupUpdateFlag: false,
+    setGroupUpdateFlag: (flag: boolean) => {}
+  }
+);
+
 export default function App() {
 
   const [groupList, setGroupList] = useState(new TGroupList());
   const groupListValue = useMemo(() => ({groupList, setGroupList}), [groupList]);
+
+  const [groupUpdateFlag, setGroupUpdateFlag] = useState(false);
+  const groupUpdateFlagValue = useMemo(() => ({groupUpdateFlag, setGroupUpdateFlag}), [groupUpdateFlag]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,6 +49,7 @@ export default function App() {
 
       const data = await response.json()
       console.log('Input data:', data)
+      groupList.clear();
       data.groups.forEach((item: any) => {
         const group = new TGroup(
           item[0],
@@ -51,15 +62,17 @@ export default function App() {
         groupList.addItem(group);
       })
       setGroupList(new TGroupList(groupList.getItems()));
+      setGroupUpdateFlag(false);
     }
 
     fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [groupUpdateFlag]);
 
   return (
     <div id="app" className="App">
       <GroupListContext.Provider value={groupListValue}>
+      <GroupUpdateFlagContext.Provider value={groupUpdateFlagValue}>
         <Routes>
           <Route index element={<GroupList />} />
           <Route path="/">
@@ -73,6 +86,7 @@ export default function App() {
             <Route path=":groupId/new_expense" element={<NewExpense />} />
           </Route>
         </Routes>
+      </GroupUpdateFlagContext.Provider>
       </GroupListContext.Provider>
     </div>
   );
