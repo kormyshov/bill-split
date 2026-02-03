@@ -23,4 +23,7 @@ export class TExpenseList {
         this.items.push(item);
     }
 
+    public clear(): void {
+        this.items = new Array<TExpense>();
+    }
 }

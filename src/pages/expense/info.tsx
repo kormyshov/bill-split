@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlCard from '@shoelace-style/shoelace/dist/react/card';
 import SlFormatDate from '@shoelace-style/shoelace/dist/react/format-date';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
+
+import { ExpenseUpdateFlagContext } from '../../app/App';
 
 import { TDebtList } from '../../entities/types/debt/debt_list';
 import { TDebt } from '../../entities/types/debt/debt';
@@ -16,6 +18,8 @@ export default function ExpenseInfo() {
 
   const { groupId } = useParams();
   const { expenseId } = useParams();
+
+  const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
 
   const navigate = useNavigate();
 
@@ -50,7 +54,7 @@ export default function ExpenseInfo() {
 
   const lst = expenseDebts.getItems().map(
     (debt) => 
-      <SlCard style={{ width: '100%', marginBottom: '1rem' }}>
+      <SlCard key={debt.getId()} style={{ width: '100%', marginBottom: '1rem' }}>
         <b>{debt.getFirstAndLastName()}</b>
         <span style={{ float: 'right' }}>{debt.getDebtAmountFormatted()}</span>
       </SlCard>
@@ -58,6 +62,7 @@ export default function ExpenseInfo() {
 
   const handleDeleteExpense = () => {
     deleteExpense(Number(expenseId));
+    setExpenseUpdateFlag(-1);
     navigate('/groups/' + groupId);
   }
 

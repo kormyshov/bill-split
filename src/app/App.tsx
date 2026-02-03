@@ -17,6 +17,7 @@ import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.j
 
 import { TGroup } from '../entities/types/group/group.ts';
 import { TGroupList } from '../entities/types/group/group_list.ts';
+import { TExpenseList } from '../entities/types/expense/expense_list.ts';
 
 setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/');
 
@@ -34,6 +35,20 @@ export const GroupUpdateFlagContext = React.createContext(
   }
 );
 
+export const ExpenseListContext = React.createContext(
+  {
+    expenseList: new TExpenseList(),
+    setExpenseList: (expenseList: TExpenseList) => {}
+  }
+);
+
+export const ExpenseUpdateFlagContext = React.createContext(
+  {
+    expenseUpdateFlag: -1,
+    setExpenseUpdateFlag: (flag: number) => {}
+  }
+);
+
 export default function App() {
 
   const [groupList, setGroupList] = useState(new TGroupList());
@@ -41,6 +56,12 @@ export default function App() {
 
   const [groupUpdateFlag, setGroupUpdateFlag] = useState(false);
   const groupUpdateFlagValue = useMemo(() => ({groupUpdateFlag, setGroupUpdateFlag}), [groupUpdateFlag]);
+
+  const [expenseList, setExpenseList] = useState(new TExpenseList());
+  const expenseListValue = useMemo(() => ({expenseList, setExpenseList}), [expenseList]);
+
+  const [expenseUpdateFlag, setExpenseUpdateFlag] = useState(-1);
+  const expenseUpdateFlagValue = useMemo(() => ({expenseUpdateFlag, setExpenseUpdateFlag}), [expenseUpdateFlag]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,6 +94,8 @@ export default function App() {
     <div id="app" className="App">
       <GroupListContext.Provider value={groupListValue}>
       <GroupUpdateFlagContext.Provider value={groupUpdateFlagValue}>
+      <ExpenseListContext.Provider value={expenseListValue}>
+      <ExpenseUpdateFlagContext.Provider value={expenseUpdateFlagValue}>
         <Routes>
           <Route index element={<GroupList />} />
           <Route path="/">
@@ -86,6 +109,8 @@ export default function App() {
             <Route path=":groupId/new_expense" element={<NewExpense />} />
           </Route>
         </Routes>
+      </ExpenseUpdateFlagContext.Provider>
+      </ExpenseListContext.Provider>
       </GroupUpdateFlagContext.Provider>
       </GroupListContext.Provider>
     </div>

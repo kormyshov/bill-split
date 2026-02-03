@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 
 import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
@@ -9,11 +9,14 @@ import SlButton from '@shoelace-style/shoelace/dist/react/button';
 import { getCommand } from '../../entities/upload/common';
 
 import { GroupListContext } from '../../app/App';
+import { ExpenseListContext } from '../../app/App';
+import { ExpenseUpdateFlagContext } from '../../app/App';
 import { TGroup } from '../../entities/types/group/group';
 import { TExpenseList } from '../../entities/types/expense/expense_list';
 import { TExpense } from '../../entities/types/expense/expense';
 
 import { GRADIENTS } from '../../entities/data/gradients.ts';
+
 
 export default function GroupInfo() {
 
@@ -23,7 +26,8 @@ export default function GroupInfo() {
 
   const navigate = useNavigate();
 
-  const [groupExpenses, setGroupExpenses] = useState(new TExpenseList());
+  const { expenseList, setExpenseList } = useContext(ExpenseListContext);
+  const { expenseUpdateFlag, setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,6 +36,7 @@ export default function GroupInfo() {
 
       const data = await response.json()
       console.log('Input expense list:', data)
+      expenseList.clear();
       data.group_expenses.forEach((item: any) => {
         const expense = new TExpense(
           item[0],
@@ -41,18 +46,19 @@ export default function GroupInfo() {
           item[4],
           item[5]
         );
-        groupExpenses.addItem(expense);
+        expenseList.addItem(expense);
       })
-      setGroupExpenses(new TExpenseList(groupExpenses.getItems()));
+      setExpenseList(new TExpenseList(expenseList.getItems()));
+      setExpenseUpdateFlag(group.getId());
     }
 
-    fetchData();
+    if (expenseUpdateFlag !== group.getId()) fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [expenseUpdateFlag]);
 
-  const lst = groupExpenses.getItems().map(
+  const lst = expenseList.getItems().map(
     (expense) => 
-      <Link key={group.getId()} to={`/groups/${group.getId()}/expenses/${expense.getId()}`} style={{ textDecoration: 'none' }}>
+      <Link key={expense.getId()} to={`/groups/${group.getId()}/expenses/${expense.getId()}`} style={{ textDecoration: 'none' }}>
         <SlCard style={{ width: '100%', marginBottom: '1rem' }}>
           <b>{expense.getName()}</b>
           <span style={{ float: 'right' }}>{expense.getAmountFormatted()}</span>
@@ -64,6 +70,7 @@ export default function GroupInfo() {
 
   return (
     <>
+
       <div style={{ background: GRADIENTS[group.getId() % 15], width: '100%', height: '10rem', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
           <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/')} />

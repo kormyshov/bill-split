@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
 import SlTabPanel from '@shoelace-style/shoelace/dist/react/tab-panel';
 import SlRadioGroup from '@shoelace-style/shoelace/dist/react/radio-group';
 import SlRadio from '@shoelace-style/shoelace/dist/react/radio';
+
+import { ExpenseUpdateFlagContext } from '../../app/App.tsx';
 
 import { TUser } from '../../entities/types/user/user';
 import { createCustomExpense } from '../../entities/upload/expenses.ts';
@@ -16,6 +18,7 @@ import TotalsTable from '../totals_table.tsx';
 export default function CustomExpenseTab(props: any) {
 
   const navigate = useNavigate();
+  const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
 
   const [positions, setPositions] = useState<any[]>([]);
   const [splitRestOption, setSplitRestOption] = useState('all');
@@ -47,6 +50,7 @@ export default function CustomExpenseTab(props: any) {
       props.expenseCurrency, 
       totals
     );
+    setExpenseUpdateFlag(-1);
     navigate('/groups/' + props.groupId);
   }
 

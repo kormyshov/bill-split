@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
 import SlTabPanel from '@shoelace-style/shoelace/dist/react/tab-panel';
 import SlCheckbox from '@shoelace-style/shoelace/dist/react/checkbox';
+
+import { ExpenseUpdateFlagContext } from '../../app/App.tsx';
 
 import { TUser } from '../../entities/types/user/user';
 import { createEquallyExpense } from '../../entities/upload/expenses.ts';
@@ -14,6 +16,7 @@ import { CURRENCIES } from '../../entities/data/currencies';
 export default function EquallyExpenseTab(props: any) {
 
   const navigate = useNavigate();
+  const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
 
   const [checkedList, setCheckedList] = useState<number[]>(props.groupMembers.getItems().map((member: TUser) => member.getId()));
 
@@ -45,6 +48,7 @@ export default function EquallyExpenseTab(props: any) {
       props.expenseCurrency, 
       checkedList
     );
+    setExpenseUpdateFlag(-1);
     navigate('/groups/' + props.groupId);
   }
 
