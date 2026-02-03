@@ -16,6 +16,8 @@ import { TExpenseList } from '../../entities/types/expense/expense_list';
 import { TExpense } from '../../entities/types/expense/expense';
 
 import { GRADIENTS } from '../../entities/data/gradients.ts';
+import { CURRENCIES } from '../../entities/data/currencies.ts';
+import { formatAmount } from '../../entities/utils/common.ts';
 
 
 export default function GroupInfo() {
@@ -44,7 +46,8 @@ export default function GroupInfo() {
           item[2],
           item[3],
           item[4],
-          item[5]
+          item[5],
+          item[6]
         );
         expenseList.addItem(expense);
       })
@@ -64,8 +67,29 @@ export default function GroupInfo() {
           <span style={{ float: 'right' }}>{expense.getAmountFormatted()}</span>
           <br />
           <small>paid by {expense.getFirstAndLastName()}</small>
+          <small 
+            {...(expense.getDebtAmount() < 0 ? { style: {color: 'red', float: 'right'} } : { style: {color: 'green', float: 'right'} })}
+          >
+            {expense.getDebtAmountFormatted()}
+          </small>
         </SlCard>
       </Link>
+  );
+
+  const totals = Object.entries(CURRENCIES).map(([key, value]) => {
+    return {
+      id: key,
+      symbol: value,
+      amount: expenseList.getItems().filter(e => e.getCurrencySymbol() === value).reduce((sum, e) => sum + e.getDebtAmount(), 0)
+    }
+  });
+
+  const totalsList = totals.filter(t => t.amount !== 0).map(t => 
+    <span
+      {...(t.amount < 0 ? { style: {color: 'red'} } : { style: {color: 'green'} })}
+    >
+      <b>{formatAmount(t.amount, t.symbol)}</b><br />
+    </span>
   );
 
   return (
@@ -77,6 +101,9 @@ export default function GroupInfo() {
           <SlIconButton name="gear" label="Settings" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/' + groupId + '/settings')} />
           <h2 style={{ marginBottom: '0px' }}>{group.getName()}</h2>
           <SlBadge variant="neutral">{group.getCount()} member(s)</SlBadge>
+          <div style={{ float: 'right', textAlign: 'right' }}>
+            {totalsList}
+          </div>
         </div>
       </div>
 
