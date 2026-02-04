@@ -33,7 +33,7 @@ export default function GroupSetting() {
   const [groupName, setGroupName] = useState(group.getName());
   const [dialogGroupName, setDialogGroupName] = useState(group.getName());
 
-  const { expenseList, setExpenseList } = useContext(ExpenseListContext);
+  const { expenseList } = useContext(ExpenseListContext);
 
   const not_zero_totals = Object
     .values(CURRENCIES).map((value) => {
