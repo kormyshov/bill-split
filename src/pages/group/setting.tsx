@@ -12,12 +12,14 @@ import { getCommand } from '../../entities/upload/common';
 
 import { GroupListContext } from '../../app/App';
 import { GroupUpdateFlagContext } from '../../app/App';
+import { ExpenseListContext } from '../../app/App';
 import { TGroup } from '../../entities/types/group/group';
 import { TUser } from '../../entities/types/user/user';
 import { TUserList } from '../../entities/types/user/user_list';
 import { changeGroupName, leaveGroup } from '../../entities/upload/groups';
 
 import { GRADIENTS } from '../../entities/data/gradients.ts';
+import { CURRENCIES } from '../../entities/data/currencies.ts';
 
 
 export default function GroupSetting() {
@@ -30,6 +32,14 @@ export default function GroupSetting() {
 
   const [groupName, setGroupName] = useState(group.getName());
   const [dialogGroupName, setDialogGroupName] = useState(group.getName());
+
+  const { expenseList, setExpenseList } = useContext(ExpenseListContext);
+
+  const not_zero_totals = Object
+    .values(CURRENCIES).map((value) => {
+      return expenseList.getItems().filter(e => e.getCurrencySymbol() === value).reduce((sum, e) => sum + e.getDebtAmount(), 0)
+    })
+    .filter(amount => amount !== 0);
 
   const navigate = useNavigate();
 
@@ -132,9 +142,15 @@ export default function GroupSetting() {
           style={{ marginTop: '2rem', width: '100%' }} 
           onClick={() => handleLeaveGroup()} 
           outline
+          {...(not_zero_totals.length > 0 ? { disabled: true } : { disabled: false })}
         >
           Leave group
         </SlButton>
+        <span
+          {...(not_zero_totals.length > 0 ? { style: { display: 'block', fontSize: '0.8rem' } } : { style: { display: 'none' } })}
+        >
+          You cannot leave the group while you have unsettled balances.
+        </span>
       </div>
     </>
   );
