@@ -5,6 +5,7 @@ import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlBadge from '@shoelace-style/shoelace/dist/react/badge';
 import SlCard from '@shoelace-style/shoelace/dist/react/card';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
+import SlIcon from '@shoelace-style/shoelace/dist/react/icon';
 
 import { getCommand } from '../../entities/upload/common';
 
@@ -97,12 +98,18 @@ export default function GroupInfo() {
 
       <div style={{ background: GRADIENTS[group.getId() % 15], width: '100%', height: '10rem', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
-          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/')} />
-          <SlIconButton name="gear" label="Settings" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/' + groupId + '/settings')} />
-          <h2 style={{ marginBottom: '0px' }}>{group.getName()}</h2>
-          <SlBadge variant="neutral">{group.getCount()} member(s)</SlBadge>
-          <div style={{ float: 'right', textAlign: 'right' }}>
+          <div>
+            <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/')} />
+            <SlIconButton name="gear" label="Settings" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/' + groupId + '/settings')} />
+          </div>
+          <div style={{ float: 'left' }}>
+            <h2 style={{ marginBottom: '0px' }}>{group.getName()}</h2>
+            <SlBadge variant="neutral">{group.getCount()} member(s)</SlBadge>
+          </div>
+          
+          <div style={{ float: 'right', textAlign: 'right', marginTop: '1rem' }}>
             {totalsList}
+            <SlButton variant="success" size="small" onClick={()=>navigate('/groups/' + groupId + '/settle')}>Settle up</SlButton>
           </div>
         </div>
       </div>
