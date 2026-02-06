@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Route, Routes } from "react-router-dom";
 
 import GroupList from "../pages/group/list.tsx";
@@ -8,14 +8,11 @@ import GroupSetting from "../pages/group/setting.tsx";
 import ExpenseInfo from "../pages/expense/info.tsx";
 import NewExpense from "../pages/expense/new.tsx";
 
-import { getCommand } from '../entities/upload/common.ts';
-
 import './App.css';
 
 import '@shoelace-style/shoelace/dist/themes/dark.css';
 import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.js';
 
-import { TGroup } from '../entities/types/group/group.ts';
 import { TGroupList } from '../entities/types/group/group_list.ts';
 import { TExpenseList } from '../entities/types/expense/expense_list.ts';
 
@@ -62,33 +59,6 @@ export default function App() {
 
   const [expenseUpdateFlag, setExpenseUpdateFlag] = useState(-1);
   const expenseUpdateFlagValue = useMemo(() => ({expenseUpdateFlag, setExpenseUpdateFlag}), [expenseUpdateFlag]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-
-      const response = await fetch(getCommand("groups/get_list"))
-
-      const data = await response.json()
-      console.log('Input data:', data)
-      groupList.clear();
-      data.groups.forEach((item: any) => {
-        const group = new TGroup(
-          item[0],
-          item[1],
-          item[2],
-          item[3],
-          item[4],
-          item[5]
-        );
-        groupList.addItem(group);
-      })
-      setGroupList(new TGroupList(groupList.getItems()));
-      setGroupUpdateFlag(false);
-    }
-
-    fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupUpdateFlag]);
 
   return (
     <div id="app" className="App">

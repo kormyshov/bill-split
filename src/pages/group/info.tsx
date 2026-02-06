@@ -5,7 +5,6 @@ import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlBadge from '@shoelace-style/shoelace/dist/react/badge';
 import SlCard from '@shoelace-style/shoelace/dist/react/card';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
-import SlIcon from '@shoelace-style/shoelace/dist/react/icon';
 
 import { getCommand } from '../../entities/upload/common';
 
