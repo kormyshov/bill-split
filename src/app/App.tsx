@@ -27,7 +27,7 @@ export const GroupListContext = React.createContext(
 
 export const GroupUpdateFlagContext = React.createContext(
   {
-    groupUpdateFlag: false,
+    groupUpdateFlag: true,
     setGroupUpdateFlag: (flag: boolean) => {}
   }
 );
@@ -51,7 +51,7 @@ export default function App() {
   const [groupList, setGroupList] = useState(new TGroupList());
   const groupListValue = useMemo(() => ({groupList, setGroupList}), [groupList]);
 
-  const [groupUpdateFlag, setGroupUpdateFlag] = useState(false);
+  const [groupUpdateFlag, setGroupUpdateFlag] = useState(true);
   const groupUpdateFlagValue = useMemo(() => ({groupUpdateFlag, setGroupUpdateFlag}), [groupUpdateFlag]);
 
   const [expenseList, setExpenseList] = useState(new TExpenseList());

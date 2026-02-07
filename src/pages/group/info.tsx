@@ -5,6 +5,7 @@ import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlBadge from '@shoelace-style/shoelace/dist/react/badge';
 import SlCard from '@shoelace-style/shoelace/dist/react/card';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
+import SlSkeleton from '@shoelace-style/shoelace/dist/react/skeleton';
 
 import { getCommand } from '../../entities/upload/common';
 
@@ -117,7 +118,15 @@ export default function GroupInfo() {
         <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>navigate('/groups/' + groupId + '/new_expense')}>Add expense</SlButton>
 
         <div style={{ marginTop: '1rem' }}>
-          {lst}
+          { expenseUpdateFlag !== group.getId() ?
+            <div style={{ left: 0, width: '100%', boxSizing: 'border-box' }}>
+              <SlSkeleton effect="sheen" style={{ height: '4.8rem', borderRadius: '0.2rem', width: '100%', marginBottom: '1rem' }} />
+              <SlSkeleton effect="sheen" style={{ height: '4.8rem', borderRadius: '0.2rem', width: '100%', marginBottom: '1rem' }} />
+              <SlSkeleton effect="sheen" style={{ height: '4.8rem', borderRadius: '0.2rem', width: '100%' }} />
+            </div>
+            :
+             lst
+          }
         </div>
       </div>
     </>

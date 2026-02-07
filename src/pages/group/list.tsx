@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
@@ -19,8 +19,6 @@ export default function GroupList() {
 
   const { groupList, setGroupList } = useContext(GroupListContext);
   const { groupUpdateFlag, setGroupUpdateFlag } = useContext(GroupUpdateFlagContext);
-
-  const [loading, setLoading] = useState(true);
 
   const lst = groupList.getItems().map(
     (group) => 
@@ -53,11 +51,11 @@ export default function GroupList() {
       })
       setGroupList(new TGroupList(groupList.getItems()));
       setGroupUpdateFlag(false);
-      setLoading(false);
     }
 
-    setLoading(true);
-    fetchData();
+    if (groupUpdateFlag) {
+      fetchData();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupUpdateFlag]);
 
@@ -69,7 +67,7 @@ export default function GroupList() {
           <h2 style={{ clear: 'both' }}>Your groups</h2>
         </div>
       </div>
-      { loading ?
+      { groupUpdateFlag ?
         <div style={{ left: 0, width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
           <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%', marginBottom: '1rem' }} />
           <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%' }} />
