@@ -7,6 +7,7 @@ import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
 import SlDialog from '@shoelace-style/shoelace/dist/react/dialog';
 import SlInput from '@shoelace-style/shoelace/dist/react/input';
+import SlSkeleton from '@shoelace-style/shoelace/dist/react/skeleton';
 
 import { getCommand } from '../../entities/upload/common';
 
@@ -34,6 +35,8 @@ export default function GroupSetting() {
   const [dialogGroupName, setDialogGroupName] = useState(group.getName());
 
   const { expenseList } = useContext(ExpenseListContext);
+
+  const [loading, setLoading] = useState(true);
 
   const not_zero_totals = Object
     .values(CURRENCIES).map((value) => {
@@ -82,6 +85,7 @@ export default function GroupSetting() {
         groupMembers.addItem(user);
       })
       setGroupMembers(new TUserList(groupMembers.getItems()));
+      setLoading(false);
     }
 
     fetchData();
@@ -130,11 +134,19 @@ export default function GroupSetting() {
           Group members
         </h3>
         <ul>
-          {groupMembers.getItems().map((member: TUser) => (
-            <li key={member.getTelegramId()}>
-              {member.getFirstName()} {member.getLastName()}
-            </li>
-          ))}
+          { loading ?
+            <>
+              <SlSkeleton effect="sheen" style={{ height: '0.9rem', borderRadius: '0.2rem', width: '40%', marginBottom: '0.2rem' }} />
+              <SlSkeleton effect="sheen" style={{ height: '0.9rem', borderRadius: '0.2rem', width: '38%', marginBottom: '0.2rem' }} />
+              <SlSkeleton effect="sheen" style={{ height: '0.9rem', borderRadius: '0.2rem', width: '42%', marginBottom: '0.2rem' }} />
+            </>
+            :
+            groupMembers.getItems().map((member: TUser) => (
+              <li key={member.getTelegramId()}>
+                {member.getFirstName()} {member.getLastName()}
+              </li>
+            ))
+          }
         </ul>
 
         <SlButton 

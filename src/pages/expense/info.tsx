@@ -5,6 +5,7 @@ import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlCard from '@shoelace-style/shoelace/dist/react/card';
 import SlFormatDate from '@shoelace-style/shoelace/dist/react/format-date';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
+import SlSkeleton from '@shoelace-style/shoelace/dist/react/skeleton';
 
 import { ExpenseUpdateFlagContext } from '../../app/App';
 
@@ -24,6 +25,7 @@ export default function ExpenseInfo() {
   const navigate = useNavigate();
 
   const [expenseDebts, setExpenseDebts] = useState(new TDebtList());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +48,7 @@ export default function ExpenseInfo() {
         expenseDebts.addItem(expense);
       })
       setExpenseDebts(new TDebtList(expenseDebts.getItems()));
+      setLoading(false);
     }
 
     fetchData();
@@ -76,16 +79,36 @@ export default function ExpenseInfo() {
       <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', width: '100%', height: '12rem', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
           <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/groups/' + groupId)} />
-          <h2 style={{ marginBottom: '0px' }}>
-            <span>{expenseName}</span>
-            <span style={{ float: 'right' }}>{expenseTotalAmount}</span>
-          </h2>
-          <span>paid by {paidBy}</span><br />
-          <span>at <SlFormatDate month="long" day="numeric" year="numeric" date={createdAt}/></span>
+          { loading ?
+            <>
+              <div style={{ marginTop: '1rem' }}>
+                <SlSkeleton effect="sheen" style={{ height: '2rem',  width: '38%', float: 'left', marginBottom: '0.4rem' }} />
+                <SlSkeleton effect="sheen" style={{ height: '2rem',  width: '30%', float: 'right' }} />
+                <SlSkeleton effect="sheen" style={{ height: '1rem',  width: '45%', clear: 'both', marginBottom: '0.2rem' }} />
+                <SlSkeleton effect="sheen" style={{ height: '1rem',  width: '40%', clear: 'both', marginBottom: '0.4rem' }} />
+              </div>
+            </>
+            :
+            <>
+              <h2 style={{ marginBottom: '0px' }}>
+                <span>{expenseName}</span>
+                <span style={{ float: 'right' }}>{expenseTotalAmount}</span>
+              </h2>
+              <span>paid by {paidBy}</span><br />
+              <span>at <SlFormatDate month="long" day="numeric" year="numeric" date={createdAt}/></span>
+            </>
+          }
         </div>
       </div>
       <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
-        {lst}
+        { loading ?
+          <div style={{ left: 0, width: '100%', boxSizing: 'border-box' }}>
+            <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%', marginBottom: '1rem' }} />
+            <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%' }} />
+          </div>
+        :
+          lst
+        }
         <SlButton 
           variant="danger" 
           style={{ marginTop: '2rem', width: '100%' }} 
