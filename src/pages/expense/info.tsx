@@ -7,7 +7,7 @@ import SlFormatDate from '@shoelace-style/shoelace/dist/react/format-date';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
 import SlSkeleton from '@shoelace-style/shoelace/dist/react/skeleton';
 
-import { ExpenseUpdateFlagContext } from '../../app/App';
+import { BalanceUpdateFlagContext, ExpenseUpdateFlagContext } from '../../app/App';
 
 import { TDebtList } from '../../entities/types/debt/debt_list';
 import { TDebt } from '../../entities/types/debt/debt';
@@ -21,6 +21,7 @@ export default function ExpenseInfo() {
   const { expenseId } = useParams();
 
   const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
+  const { setBalanceUpdateFlag } = useContext(BalanceUpdateFlagContext);
 
   const navigate = useNavigate();
 
@@ -66,6 +67,7 @@ export default function ExpenseInfo() {
   const handleDeleteExpense = () => {
     deleteExpense(Number(expenseId));
     setExpenseUpdateFlag(-1);
+    setBalanceUpdateFlag(-1);
     navigate('/groups/' + groupId);
   }
 

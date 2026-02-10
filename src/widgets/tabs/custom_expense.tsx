@@ -7,7 +7,7 @@ import SlTabPanel from '@shoelace-style/shoelace/dist/react/tab-panel';
 import SlRadioGroup from '@shoelace-style/shoelace/dist/react/radio-group';
 import SlRadio from '@shoelace-style/shoelace/dist/react/radio';
 
-import { ExpenseUpdateFlagContext } from '../../app/App.tsx';
+import { BalanceUpdateFlagContext, ExpenseUpdateFlagContext } from '../../app/App.tsx';
 
 import { TUser } from '../../entities/types/user/user';
 import { createCustomExpense } from '../../entities/upload/expenses.ts';
@@ -19,6 +19,7 @@ export default function CustomExpenseTab(props: any) {
 
   const navigate = useNavigate();
   const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
+  const { setBalanceUpdateFlag } = useContext(BalanceUpdateFlagContext);
 
   const [positions, setPositions] = useState<any[]>([]);
   const [splitRestOption, setSplitRestOption] = useState('all');
@@ -51,6 +52,7 @@ export default function CustomExpenseTab(props: any) {
       totals
     );
     setExpenseUpdateFlag(-1);
+    setBalanceUpdateFlag(-1);
     navigate('/groups/' + props.groupId);
   }
 

@@ -7,6 +7,7 @@ import GroupInfo from "../pages/group/info.tsx";
 import GroupSetting from "../pages/group/setting.tsx";
 import ExpenseInfo from "../pages/expense/info.tsx";
 import NewExpense from "../pages/expense/new.tsx";
+import GroupSettle from "../pages/group/settle.tsx";
 
 import './App.css';
 
@@ -15,6 +16,7 @@ import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.j
 
 import { TGroupList } from '../entities/types/group/group_list.ts';
 import { TExpenseList } from '../entities/types/expense/expense_list.ts';
+import { TBalanceList } from '../entities/types/balance/balance_list.ts';
 
 setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/');
 
@@ -46,6 +48,20 @@ export const ExpenseUpdateFlagContext = React.createContext(
   }
 );
 
+export const BalanceListContext = React.createContext(
+  {
+    balanceList: new TBalanceList(),
+    setBalanceList: (balanceList: TBalanceList) => {}
+  }
+);
+
+export const BalanceUpdateFlagContext = React.createContext(
+  {
+    balanceUpdateFlag: -1,
+    setBalanceUpdateFlag: (flag: number) => {}
+  }
+);
+
 export default function App() {
 
   const [groupList, setGroupList] = useState(new TGroupList());
@@ -60,12 +76,20 @@ export default function App() {
   const [expenseUpdateFlag, setExpenseUpdateFlag] = useState(-1);
   const expenseUpdateFlagValue = useMemo(() => ({expenseUpdateFlag, setExpenseUpdateFlag}), [expenseUpdateFlag]);
 
+  const [balanceList, setBalanceList] = useState(new TBalanceList());
+  const balanceListValue = useMemo(() => ({balanceList, setBalanceList}), [balanceList]);
+
+  const [balanceUpdateFlag, setBalanceUpdateFlag] = useState(-1);
+  const balanceUpdateFlagValue = useMemo(() => ({balanceUpdateFlag, setBalanceUpdateFlag}), [balanceUpdateFlag]);
+
   return (
     <div id="app" className="App">
       <GroupListContext.Provider value={groupListValue}>
       <GroupUpdateFlagContext.Provider value={groupUpdateFlagValue}>
       <ExpenseListContext.Provider value={expenseListValue}>
       <ExpenseUpdateFlagContext.Provider value={expenseUpdateFlagValue}>
+      <BalanceListContext.Provider value={balanceListValue}>
+      <BalanceUpdateFlagContext.Provider value={balanceUpdateFlagValue}>
         <Routes>
           <Route index element={<GroupList />} />
           <Route path="/">
@@ -77,8 +101,11 @@ export default function App() {
             <Route path=":groupId/settings" element={<GroupSetting />} />
             <Route path=":groupId/expenses/:expenseId" element={<ExpenseInfo />} />
             <Route path=":groupId/new_expense" element={<NewExpense />} />
+            <Route path=":groupId/settle" element={<GroupSettle />} />
           </Route>
         </Routes>
+      </BalanceUpdateFlagContext.Provider>
+      </BalanceListContext.Provider>
       </ExpenseUpdateFlagContext.Provider>
       </ExpenseListContext.Provider>
       </GroupUpdateFlagContext.Provider>

@@ -6,7 +6,7 @@ import SlButton from '@shoelace-style/shoelace/dist/react/button';
 import SlTabPanel from '@shoelace-style/shoelace/dist/react/tab-panel';
 import SlCheckbox from '@shoelace-style/shoelace/dist/react/checkbox';
 
-import { ExpenseUpdateFlagContext } from '../../app/App.tsx';
+import { BalanceUpdateFlagContext, ExpenseUpdateFlagContext } from '../../app/App.tsx';
 
 import { TUser } from '../../entities/types/user/user';
 import { createEquallyExpense } from '../../entities/upload/expenses.ts';
@@ -17,6 +17,7 @@ export default function EquallyExpenseTab(props: any) {
 
   const navigate = useNavigate();
   const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
+  const { setBalanceUpdateFlag } = useContext(BalanceUpdateFlagContext);
 
   const [checkedList, setCheckedList] = useState<number[]>(props.groupMembers.getItems().map((member: TUser) => member.getId()));
 
@@ -49,6 +50,7 @@ export default function EquallyExpenseTab(props: any) {
       checkedList
     );
     setExpenseUpdateFlag(-1);
+    setBalanceUpdateFlag(-1);
     navigate('/groups/' + props.groupId);
   }
 
