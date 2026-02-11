@@ -1,21 +1,23 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlCard from '@shoelace-style/shoelace/dist/react/card';
 import SlSkeleton from '@shoelace-style/shoelace/dist/react/skeleton';
+import SlDialog from '@shoelace-style/shoelace/dist/react/dialog';
+import SlButton from '@shoelace-style/shoelace/dist/react/button';
 
 import { getCommand } from '../../entities/upload/common';
 
 import { GroupListContext } from '../../app/App';
-import { ExpenseListContext, BalanceListContext, BalanceUpdateFlagContext } from '../../app/App';
+import { BalanceListContext, BalanceUpdateFlagContext, ExpenseUpdateFlagContext } from '../../app/App';
 import { TGroup } from '../../entities/types/group/group';
 import { TBalanceList } from '../../entities/types/balance/balance_list';
 
 import { GRADIENTS } from '../../entities/data/gradients.ts';
-import { CURRENCIES } from '../../entities/data/currencies.ts';
 import { formatAmount } from '../../entities/utils/common.ts';
 import { TBalance } from '../../entities/types/balance/balance.ts';
+import { createDirectExpense } from '../../entities/upload/expenses.ts';
 
 
 export default function GroupSettle() {
@@ -28,6 +30,7 @@ export default function GroupSettle() {
 
   const { balanceList, setBalanceList } = useContext(BalanceListContext);
   const { balanceUpdateFlag, setBalanceUpdateFlag } = useContext(BalanceUpdateFlagContext);
+  const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,27 +58,9 @@ export default function GroupSettle() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [balanceUpdateFlag]);
 
-  const { expenseList } = useContext(ExpenseListContext);
-
-  const totals = Object.entries(CURRENCIES).map(([key, value]) => {
-    return {
-      id: key,
-      symbol: value,
-      amount: expenseList.getItems().filter(e => e.getCurrencySymbol() === value).reduce((sum, e) => sum + e.getDebtAmount(), 0)
-    }
-  });
-
-  const totalsList = totals.filter(t => t.amount !== 0).map(t => 
-    <span
-      {...(t.amount < 0 ? { style: {color: 'red'} } : { style: {color: 'green'} })}
-    >
-      <b>{formatAmount(t.amount, t.symbol)}</b><br />
-    </span>
-  );
-
   const balances = balanceList.getItems().map(
     (balance) => 
-      <SlCard style={{ width: '100%', marginBottom: '1rem' }}>
+      <SlCard style={{ width: '100%', marginBottom: '1rem' }} onClick={() => handleOpenDialog(balance)}>
         <b>{balance.getFirstAndLastName()}</b>
         <span
           {...(balance.getAmount() < 0 ? { style: {color: 'red', float: 'right' } } : { style: {color: 'green', float: 'right' } })}
@@ -84,6 +69,27 @@ export default function GroupSettle() {
         </span>
       </SlCard>
   );
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedBalance, setSelectedBalance] = useState<TBalance | null>(null);
+
+  const handleOpenDialog = (balance: TBalance) => {
+    setSelectedBalance(balance);
+    setDialogOpen(true)
+  }
+
+  const handleCreatePayment = () => {
+    createDirectExpense(
+      groupId || '',
+      selectedBalance?.getAmount() || 0,
+      selectedBalance?.getCurrency() || 0,
+      selectedBalance?.getUserId() || 0,
+      selectedBalance?.getFirstAndLastName() || ''
+    );
+    setExpenseUpdateFlag(-1);
+    setBalanceUpdateFlag(-1);
+    setDialogOpen(false);
+  }
 
   return (
     <>
@@ -95,10 +101,6 @@ export default function GroupSettle() {
           </div>
           <div style={{ float: 'left' }}>
             <h2 style={{ marginBottom: '0px' }}>{group.getName()}</h2>
-          </div>
-          
-          <div style={{ float: 'right', textAlign: 'right', marginTop: '1rem' }}>
-            {totalsList}
           </div>
         </div>
       </div>
@@ -115,6 +117,22 @@ export default function GroupSettle() {
           balances.length > 0 ? balances : <p>All settled up!</p>
         }
       </div>
+
+      <SlDialog label="Record a payment" open={dialogOpen} onSlAfterHide={() => setDialogOpen(false)}>
+        { selectedBalance ? (
+          selectedBalance.getAmount() < 0 ?
+            <>You paid <b>{selectedBalance.getFirstAndLastName()}</b> {formatAmount(-selectedBalance.getAmount(), selectedBalance.getCurrencySymbol())}?</>
+          :
+            <><b>{selectedBalance.getFirstAndLastName()}</b> paid you {selectedBalance?.getAmountFormatted()}?</>
+          ) : null
+        }
+        <SlButton slot="footer" variant="neutral" onClick={() => setDialogOpen(false)}>
+          Cancel
+        </SlButton>
+        <SlButton slot="footer" variant="success" onClick={() => handleCreatePayment()}>
+          Save
+        </SlButton>
+      </SlDialog>
     </>
   );
 }

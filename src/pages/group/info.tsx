@@ -62,19 +62,31 @@ export default function GroupInfo() {
 
   const lst = expenseList.getItems().map(
     (expense) => 
-      <Link key={expense.getId()} to={`/groups/${group.getId()}/expenses/${expense.getId()}`} style={{ textDecoration: 'none' }}>
-        <SlCard style={{ width: '100%', marginBottom: '1rem' }}>
-          <b>{expense.getName()}</b>
-          <span style={{ float: 'right' }}>{expense.getAmountFormatted()}</span>
-          <br />
-          <small>paid by {expense.getFirstAndLastName()}</small>
-          <small 
-            {...(expense.getDebtAmount() < 0 ? { style: {color: 'red', float: 'right'} } : { style: {color: 'green', float: 'right'} })}
-          >
-            {expense.getDebtAmountFormatted()}
-          </small>
-        </SlCard>
-      </Link>
+
+           expense.getName().includes(' paid ') && expense.getName().includes(expense.getFirstAndLastName()) ?
+            <>
+            <SlCard style={{ width: '100%', marginBottom: '1rem' }}>
+              <small>{expense.getName()}</small>
+              <span style={{ float: 'right' }}>{expense.getAmountFormatted()}</span>
+            </SlCard>
+            </>
+            :
+            <>
+          <Link key={expense.getId()} to={`/groups/${group.getId()}/expenses/${expense.getId()}`} style={{ textDecoration: 'none' }}>
+            <SlCard style={{ width: '100%', marginBottom: '1rem' }}>
+              <b>{expense.getName()}</b>
+              <span style={{ float: 'right' }}>{expense.getAmountFormatted()}</span>
+              <br />
+              <small>paid by {expense.getFirstAndLastName()}</small>
+              <small 
+                {...(expense.getDebtAmount() < 0 ? { style: {color: 'red', float: 'right'} } : { style: {color: 'green', float: 'right'} })}
+              >
+                {expense.getDebtAmountFormatted()}
+              </small> 
+            </SlCard>
+          </Link>
+            </>
+          
   );
 
   const totals = Object.entries(CURRENCIES).map(([key, value]) => {

@@ -29,6 +29,20 @@ export const createCustomExpense = (groupId: string, expenseName: string, expens
     );
 }
 
+export const createDirectExpense = (groupId: string, amount: number, currency: number, user_id: number, first_and_last_name: string) => {
+    fetch(getCommand("expenses/create_direct"), getRequestOptions(
+        JSON.stringify(
+            {
+                group_id: groupId,
+                amount: amount,
+                currency: currency,
+                user_id: user_id,
+                first_and_last_name: first_and_last_name
+            }
+        ))
+    );
+}
+
 export const deleteExpense = (expenseId: number) => {
     fetch(getCommand("expenses/delete"), getRequestOptions(expenseId));
 }
