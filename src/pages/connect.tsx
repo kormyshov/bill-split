@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
@@ -16,8 +16,16 @@ export default function Connect() {
 
   const { setGroupUpdateFlag } = useContext(GroupUpdateFlagContext);
 
-  joinToGroup(token ? token : "");
-  setGroupUpdateFlag(true);
+  useEffect(() => {
+    const fetchData = async () => {
+      joinToGroup(token ? token : "");
+      setGroupUpdateFlag(true);
+    }
+
+    fetchData();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
