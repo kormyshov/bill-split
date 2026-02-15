@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import SlInput from '@shoelace-style/shoelace/dist/react/input';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
@@ -12,10 +12,11 @@ import { GroupUpdateFlagContext } from '../app/App.tsx';
 
 export default function Connect() {
 
-  const param = window.Telegram.WebApp.initDataUnsafe.start_param;
+  const { token } = useParams();
+  window.Telegram.WebApp.initDataUnsafe.start_param = "";
 
   const navigate = useNavigate();
-  const [groupToken, setGroupToken] = useState(param ? param : "");
+  const [groupToken, setGroupToken] = useState(token ? token : "");
 
   const { groupList } = useContext(GroupListContext);
   const { setGroupUpdateFlag } = useContext(GroupUpdateFlagContext);

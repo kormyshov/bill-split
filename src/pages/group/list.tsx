@@ -17,6 +17,12 @@ export default function GroupList() {
 
   const navigate = useNavigate();
 
+  const param = window.Telegram.WebApp.initDataUnsafe.start_param;
+
+  if (param) {
+    navigate(`/connect/${param}`);
+  }
+
   const { groupList, setGroupList } = useContext(GroupListContext);
   const { groupUpdateFlag, setGroupUpdateFlag } = useContext(GroupUpdateFlagContext);
 

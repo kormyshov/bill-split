@@ -104,7 +104,7 @@ export default function App() {
             <Route path=":groupId/new_expense" element={<NewExpense />} />
             <Route path=":groupId/settle" element={<GroupSettle />} />
           </Route>
-          <Route path="connect" element={<Connect />} />
+          <Route path="connect/:token" element={<Connect />} />
         </Routes>
       </BalanceUpdateFlagContext.Provider>
       </BalanceListContext.Provider>
