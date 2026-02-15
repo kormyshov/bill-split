@@ -8,6 +8,7 @@ import GroupSetting from "../pages/group/setting.tsx";
 import ExpenseInfo from "../pages/expense/info.tsx";
 import NewExpense from "../pages/expense/new.tsx";
 import GroupSettle from "../pages/group/settle.tsx";
+import Connect from "../pages/connect.tsx";
 
 import './App.css';
 
@@ -103,6 +104,7 @@ export default function App() {
             <Route path=":groupId/new_expense" element={<NewExpense />} />
             <Route path=":groupId/settle" element={<GroupSettle />} />
           </Route>
+          <Route path="connect" element={<Connect />} />
         </Routes>
       </BalanceUpdateFlagContext.Provider>
       </BalanceListContext.Provider>

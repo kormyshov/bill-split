@@ -121,7 +121,7 @@ export default function GroupSetting() {
 
       <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
         <TelegramShareButton
-          url={"https://t.me/mrBillSplitBot"}
+          url={"https://t.me/mrBillSplitBot/startapp"}
           title={"\nStart bot Mr. Bill Split and join to group \"" + groupName + "\" using this token: " + group.getToken() + "\n"}
           style={{ width: '100%' }}
         >
