@@ -8,6 +8,7 @@ import { GroupUpdateFlagContext } from '../app/App.tsx';
 export default function Connect() {
 
   const { token } = useParams();
+  window.Telegram.WebApp.initDataUnsafe.start_param = "";
 
   const navigate = useNavigate();
 
