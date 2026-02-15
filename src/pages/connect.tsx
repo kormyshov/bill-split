@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import SlInput from '@shoelace-style/shoelace/dist/react/input';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
 import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
-import SlDivider from '@shoelace-style/shoelace/dist/react/divider';
 
 import { joinToGroup } from '../entities/upload/groups.ts';
 import { GroupListContext } from '../app/App.tsx';
