@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import SlInput from '@shoelace-style/shoelace/dist/react/input';
@@ -9,6 +9,8 @@ import SlTab from '@shoelace-style/shoelace/dist/react/tab';
 import SlTabGroup from '@shoelace-style/shoelace/dist/react/tab-group';
 
 import { getCommand } from '../../entities/upload/common';
+
+import { ExpenseListContext } from '../../app/App';
 
 import { TUser } from '../../entities/types/user/user';
 import { TUserList } from '../../entities/types/user/user_list';
@@ -24,7 +26,6 @@ export default function NewExpense() {
 
   const [expenseName, setExpenseName] = useState('');
   const [expenseAmount, setExpenseAmount] = useState(0);
-  const [expenseCurrency, setExpenseCurrency] = useState('1');
 
   const [groupMembers, setGroupMembers] = useState(new TUserList());
 
@@ -51,16 +52,33 @@ export default function NewExpense() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const currencyOptions = Object.entries(CURRENCIES).map(
-    ([key, value]) => 
-      <SlOption
-        value={key}
-        {...(key === expenseCurrency ? { selected: true } : { selected: false })}
-      >
-        {value}
-      </SlOption>
-  );
+  const { expenseList } = useContext(ExpenseListContext);
+  const usedCurrencies = expenseList.getItems().map(expense => expense.getCurrencySymbol());
 
+  const currencyOptions = Object.entries(CURRENCIES)
+    .sort((a, b) => {
+      if (usedCurrencies.indexOf(a[1]) === -1 && usedCurrencies.indexOf(b[1]) === -1) {
+        return a[1].localeCompare(b[1]);
+      }
+      if (usedCurrencies.indexOf(a[1]) === -1) {
+        return 1;
+      }
+      if (usedCurrencies.indexOf(b[1]) === -1) {
+        return -1;
+      }
+      return usedCurrencies.indexOf(a[1]) - usedCurrencies.indexOf(b[1])
+    })
+    .map(
+      ([key, value]) => 
+        <SlOption
+          value={key}
+          {...(value === usedCurrencies[0] ? { selected: true } : { selected: false })}
+        >
+          {value}
+        </SlOption>
+    );
+
+  const [expenseCurrency, setExpenseCurrency] = useState(currencyOptions[0].props.value as string);
 
   return (
     <>
