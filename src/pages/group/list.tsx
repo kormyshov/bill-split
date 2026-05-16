@@ -29,7 +29,7 @@ export default function GroupList() {
   const { groupList, setGroupList } = useContext(GroupListContext);
   const { groupUpdateFlag, setGroupUpdateFlag } = useContext(GroupUpdateFlagContext);
 
-  const { account, setAccount } = useContext(AccountContext);
+  const { setAccount } = useContext(AccountContext);
   const { accountUpdateFlag, setAccountUpdateFlag } = useContext(AccountUpdateFlagContext);
 
   const lst = groupList.getItems().map(
@@ -96,7 +96,7 @@ export default function GroupList() {
     <>
       <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', top: 0, left: 0, width: '100%', height: '10rem', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
-          <SlIconButton name="person-circle" label="Account" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/account/info')} />
+          {/* <SlIconButton name="person-circle" label="Account" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/account/info')} /> */}
           <SlIconButton name="person-plus" label="Add group" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/new')} />
           <h2 style={{ clear: 'both' }}>Your groups</h2>
         </div>
