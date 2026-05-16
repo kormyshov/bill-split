@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { AccountContext } from '../../app/App.tsx';
-import { AccountUpdateFlagContext } from '../../app/App.tsx';
+// import { AccountUpdateFlagContext } from '../../app/App.tsx';
 import SlFormatDate from '@shoelace-style/shoelace/dist/react/format-date';
 
 import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
@@ -15,7 +15,7 @@ export default function AccountInfo() {
   const navigate = useNavigate();
 
   const { account } = useContext(AccountContext);
-  const { setAccountUpdateFlag } = useContext(AccountUpdateFlagContext);
+  // const { setAccountUpdateFlag } = useContext(AccountUpdateFlagContext);
 
   return (
     <>
