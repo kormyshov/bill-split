@@ -9,6 +9,7 @@ import ExpenseInfo from "../pages/expense/info.tsx";
 import NewExpense from "../pages/expense/new.tsx";
 import GroupSettle from "../pages/group/settle.tsx";
 import Connect from "../pages/connect.tsx";
+import AccountInfo from '../pages/account/info.tsx';
 
 import './App.css';
 
@@ -18,6 +19,7 @@ import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.j
 import { TGroupList } from '../entities/types/group/group_list.ts';
 import { TExpenseList } from '../entities/types/expense/expense_list.ts';
 import { TBalanceList } from '../entities/types/balance/balance_list.ts';
+import { TUser } from '../entities/types/user/user.ts';
 
 setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/');
 
@@ -63,6 +65,20 @@ export const BalanceUpdateFlagContext = React.createContext(
   }
 );
 
+export const AccountContext = React.createContext(
+  {
+    account: new TUser(-1, '', '', '', ''),
+    setAccount: (account: TUser) => {}
+  }
+);
+
+export const AccountUpdateFlagContext = React.createContext(
+  {
+    accountUpdateFlag: true,
+    setAccountUpdateFlag: (flag: boolean) => {}
+  }
+);
+
 export default function App() {
 
   const [groupList, setGroupList] = useState(new TGroupList());
@@ -83,6 +99,12 @@ export default function App() {
   const [balanceUpdateFlag, setBalanceUpdateFlag] = useState(-1);
   const balanceUpdateFlagValue = useMemo(() => ({balanceUpdateFlag, setBalanceUpdateFlag}), [balanceUpdateFlag]);
 
+  const [account, setAccount] = useState(new TUser(-1, '', '', '', ''));
+  const accountValue = useMemo(() => ({account, setAccount}), [account]);
+
+  const [accountUpdateFlag, setAccountUpdateFlag] = useState(true);
+  const accountUpdateFlagValue = useMemo(() => ({accountUpdateFlag, setAccountUpdateFlag}), [accountUpdateFlag]);
+
   return (
     <div id="app" className="App">
       <GroupListContext.Provider value={groupListValue}>
@@ -91,6 +113,8 @@ export default function App() {
       <ExpenseUpdateFlagContext.Provider value={expenseUpdateFlagValue}>
       <BalanceListContext.Provider value={balanceListValue}>
       <BalanceUpdateFlagContext.Provider value={balanceUpdateFlagValue}>
+      <AccountContext.Provider value={accountValue}>
+      <AccountUpdateFlagContext.Provider value={accountUpdateFlagValue}>
         <Routes>
           <Route index element={<GroupList />} />
           <Route path="/">
@@ -104,8 +128,13 @@ export default function App() {
             <Route path=":groupId/new_expense" element={<NewExpense />} />
             <Route path=":groupId/settle" element={<GroupSettle />} />
           </Route>
+          <Route path="account">
+            <Route path="info" element={<AccountInfo />} />
+          </Route>
           <Route path="connect/:token" element={<Connect />} />
         </Routes>
+      </AccountUpdateFlagContext.Provider>
+      </AccountContext.Provider>
       </BalanceUpdateFlagContext.Provider>
       </BalanceListContext.Provider>
       </ExpenseUpdateFlagContext.Provider>

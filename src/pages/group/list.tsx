@@ -8,8 +8,11 @@ import { getCommand } from '../../entities/upload/common';
 
 import { GroupListContext } from '../../app/App.tsx';
 import { GroupUpdateFlagContext } from '../../app/App.tsx';
+import { AccountContext } from '../../app/App.tsx';
+import { AccountUpdateFlagContext } from '../../app/App.tsx';
 import { TGroupList } from '../../entities/types/group/group_list.ts';
 import { TGroup } from '../../entities/types/group/group.ts';
+import { TUser } from '../../entities/types/user/user.ts';
 
 import { GRADIENTS } from '../../entities/data/gradients.ts';
 
@@ -25,6 +28,9 @@ export default function GroupList() {
 
   const { groupList, setGroupList } = useContext(GroupListContext);
   const { groupUpdateFlag, setGroupUpdateFlag } = useContext(GroupUpdateFlagContext);
+
+  const { account, setAccount } = useContext(AccountContext);
+  const { accountUpdateFlag, setAccountUpdateFlag } = useContext(AccountUpdateFlagContext);
 
   const lst = groupList.getItems().map(
     (group) => 
@@ -59,16 +65,38 @@ export default function GroupList() {
       setGroupUpdateFlag(false);
     }
 
+    const fetchAccountData = async () => {
+
+      const response = await fetch(getCommand("account/get_info"))
+
+      const data = await response.json()
+      console.log('Input account data:', data)
+      const loadAccount = new TUser(
+        data.account[0],
+        data.account[1],
+        data.account[2],
+        data.account[3],
+        data.account[4]
+      );
+      setAccount(loadAccount);
+      setAccountUpdateFlag(false);
+    }
+
     if (groupUpdateFlag) {
       fetchData();
     }
+
+    if (accountUpdateFlag) {
+      fetchAccountData();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupUpdateFlag]);
+  }, [groupUpdateFlag, accountUpdateFlag]);
 
   return (
     <>
       <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', top: 0, left: 0, width: '100%', height: '10rem', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
+          <SlIconButton name="person-circle" label="Account" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/account/info')} />
           <SlIconButton name="person-plus" label="Add group" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/new')} />
           <h2 style={{ clear: 'both' }}>Your groups</h2>
         </div>

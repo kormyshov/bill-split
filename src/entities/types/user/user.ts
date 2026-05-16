@@ -4,12 +4,14 @@ export class TUser {
     private telegram_id: string;
     private first_name: string;
     private last_name: string;
+    private expired_date: string;
     
-    constructor(id: number, telegram_id: string, first_name: string, last_name: string) {
+    constructor(id: number, telegram_id: string, first_name: string, last_name: string, expired_date: string) {
         this.id = id;
         this.telegram_id = telegram_id;
         this.first_name = first_name;
         this.last_name = last_name;
+        this.expired_date = expired_date;
     }
 
     public getId(): number {
@@ -26,6 +28,16 @@ export class TUser {
 
     public getLastName(): string {
         return this.last_name;
+    }
+
+    public getExpiredDate(): string {
+        return this.expired_date;
+    }
+
+    public isPremium(): boolean {
+        const currentDate = new Date();
+        const expiredDate = new Date(this.expired_date);
+        return expiredDate >= currentDate;
     }
 
 }
