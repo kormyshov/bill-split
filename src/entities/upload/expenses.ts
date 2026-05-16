@@ -1,7 +1,7 @@
 import { getCommand, getRequestOptions } from "./common.ts";
 
 
-export const createEquallyExpense = (groupId: string, expenseName: string, expenseAmount: number, expenseCurrency: string, checkedList: number[]) => {
+export const createEquallyExpense = (groupId: string, expenseName: string, expenseAmount: number, expenseCurrency: string, payer_id: string, checkedList: number[]) => {
     fetch(getCommand("expenses/create_equally"), getRequestOptions(
         JSON.stringify(
             {
@@ -9,13 +9,14 @@ export const createEquallyExpense = (groupId: string, expenseName: string, expen
                 expense_name: expenseName,
                 expense_amount: expenseAmount,
                 expense_currency: Number(expenseCurrency),
+                payer_id: Number(payer_id),
                 user_ids: checkedList
             }
         ))
     );
 }
 
-export const createCustomExpense = (groupId: string, expenseName: string, expenseAmount: number, expenseCurrency: string, totals: any[]) => {
+export const createCustomExpense = (groupId: string, expenseName: string, expenseAmount: number, expenseCurrency: string, payer_id: string, totals: any[]) => {
     fetch(getCommand("expenses/create_custom"), getRequestOptions(
         JSON.stringify(
             {
@@ -23,6 +24,7 @@ export const createCustomExpense = (groupId: string, expenseName: string, expens
                 expense_name: expenseName,
                 expense_amount: expenseAmount,
                 expense_currency: Number(expenseCurrency),
+                payer_id: Number(payer_id),
                 totals: totals
             }
         ))

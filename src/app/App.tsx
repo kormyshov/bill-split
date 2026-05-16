@@ -20,6 +20,7 @@ import { TGroupList } from '../entities/types/group/group_list.ts';
 import { TExpenseList } from '../entities/types/expense/expense_list.ts';
 import { TBalanceList } from '../entities/types/balance/balance_list.ts';
 import { TUser } from '../entities/types/user/user.ts';
+import { TUserList } from '../entities/types/user/user_list.ts';
 
 setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/');
 
@@ -48,6 +49,20 @@ export const ExpenseUpdateFlagContext = React.createContext(
   {
     expenseUpdateFlag: -1,
     setExpenseUpdateFlag: (flag: number) => {}
+  }
+);
+
+export const MemberListContext = React.createContext(
+  {
+    memberList: new TUserList(),
+    setMemberList: (memberList: TUserList) => {}
+  }
+);
+
+export const MemberUpdateFlagContext = React.createContext(
+  {
+    memberUpdateFlag: -1,
+    setMemberUpdateFlag: (flag: number) => {}
   }
 );
 
@@ -93,6 +108,12 @@ export default function App() {
   const [expenseUpdateFlag, setExpenseUpdateFlag] = useState(-1);
   const expenseUpdateFlagValue = useMemo(() => ({expenseUpdateFlag, setExpenseUpdateFlag}), [expenseUpdateFlag]);
 
+  const [memberList, setMemberList] = useState(new TUserList());
+  const memberListValue = useMemo(() => ({memberList, setMemberList}), [memberList]);
+
+  const [memberUpdateFlag, setMemberUpdateFlag] = useState(-1);
+  const memberUpdateFlagValue = useMemo(() => ({memberUpdateFlag, setMemberUpdateFlag}), [memberUpdateFlag]);
+
   const [balanceList, setBalanceList] = useState(new TBalanceList());
   const balanceListValue = useMemo(() => ({balanceList, setBalanceList}), [balanceList]);
 
@@ -111,6 +132,8 @@ export default function App() {
       <GroupUpdateFlagContext.Provider value={groupUpdateFlagValue}>
       <ExpenseListContext.Provider value={expenseListValue}>
       <ExpenseUpdateFlagContext.Provider value={expenseUpdateFlagValue}>
+      <MemberListContext.Provider value={memberListValue}>
+      <MemberUpdateFlagContext.Provider value={memberUpdateFlagValue}>
       <BalanceListContext.Provider value={balanceListValue}>
       <BalanceUpdateFlagContext.Provider value={balanceUpdateFlagValue}>
       <AccountContext.Provider value={accountValue}>
@@ -137,6 +160,8 @@ export default function App() {
       </AccountContext.Provider>
       </BalanceUpdateFlagContext.Provider>
       </BalanceListContext.Provider>
+      </MemberUpdateFlagContext.Provider>
+      </MemberListContext.Provider>
       </ExpenseUpdateFlagContext.Provider>
       </ExpenseListContext.Provider>
       </GroupUpdateFlagContext.Provider>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import SlInput from '@shoelace-style/shoelace/dist/react/input';
@@ -8,12 +8,9 @@ import SlSelect from '@shoelace-style/shoelace/dist/react/select';
 import SlTab from '@shoelace-style/shoelace/dist/react/tab';
 import SlTabGroup from '@shoelace-style/shoelace/dist/react/tab-group';
 
-import { getCommand } from '../../entities/upload/common';
+import { AccountContext, ExpenseListContext } from '../../app/App';
+import { MemberListContext } from '../../app/App';
 
-import { ExpenseListContext } from '../../app/App';
-
-import { TUser } from '../../entities/types/user/user';
-import { TUserList } from '../../entities/types/user/user_list';
 import { CURRENCIES } from '../../entities/data/currencies';
 import EquallyExpenseTab from '../../widgets/tabs/equally_expense.tsx';
 import CustomExpenseTab from '../../widgets/tabs/custom_expense.tsx';
@@ -27,31 +24,8 @@ export default function NewExpense() {
   const [expenseName, setExpenseName] = useState('');
   const [expenseAmount, setExpenseAmount] = useState(0);
 
-  const [groupMembers, setGroupMembers] = useState(new TUserList());
-
-  useEffect(() => {
-    const fetchData = async () => {
-
-      const response = await fetch(getCommand("groups/get_member_list&group_id=" + groupId))
-
-      const data = await response.json()
-      console.log('Input member list:', data)
-      data.group_members.forEach((item: any) => {
-        const user = new TUser(
-          item[0],
-          item[1],
-          item[2],
-          item[3],
-          item[4]
-        );
-        groupMembers.addItem(user);
-      })
-      setGroupMembers(new TUserList(groupMembers.getItems()));
-    }
-
-    fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { account } = useContext(AccountContext)
+  const { memberList } = useContext(MemberListContext);
 
   const { expenseList } = useContext(ExpenseListContext);
   const usedCurrencies = expenseList.getItems().map(expense => expense.getCurrencySymbol());
@@ -81,6 +55,29 @@ export default function NewExpense() {
 
   const [expenseCurrency, setExpenseCurrency] = useState(currencyOptions[0].props.value as string);
 
+  const memberOptions = memberList.getItems()
+    .sort((a, b) => {
+      if (a.getId() !== account.getId() && b.getId() !== account.getId()) {
+        return (a.getFirstName() + a.getLastName()).localeCompare(b.getFirstName() + b.getLastName());
+      }
+      if (a.getId() !== account.getId()) {
+        return 1;
+      }
+      if (b.getId() !== account.getId()) {
+        return -1;
+      }
+      return 0;
+    })
+    .map(
+      (member) => (
+        <SlOption value={member.getId().toString()}>
+          {member.getFirstName()} {member.getLastName()}
+        </SlOption>
+      )
+    );
+  
+  const [payerId, setPayerId] = useState(memberOptions[0].props.value as string);
+
   return (
     <>
       <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', width: '100%', boxSizing: 'border-box' }}>
@@ -109,6 +106,13 @@ export default function NewExpense() {
       >
         {currencyOptions}
       </SlSelect>
+      <SlSelect
+        value={payerId}
+        style={{ width: '100%', marginBottom: '1rem' }}
+        onSlChange={(e)=>setPayerId((e.target as HTMLSelectElement).value)}
+      >
+        {memberOptions}
+      </SlSelect>
         </div>
       </div>
 
@@ -128,18 +132,20 @@ export default function NewExpense() {
 
         <EquallyExpenseTab 
           groupId={groupId}
-          groupMembers={groupMembers} 
+          groupMembers={memberList} 
           expenseName={expenseName} 
           expenseAmount={expenseAmount} 
           expenseCurrency={expenseCurrency} 
+          payerId={payerId}
         />
 
         <CustomExpenseTab 
           groupId={groupId}
-          groupMembers={groupMembers} 
+          groupMembers={memberList} 
           expenseName={expenseName}
           expenseAmount={expenseAmount}
           expenseCurrency={expenseCurrency}
+          payerId={payerId}
         />
       </SlTabGroup>
       </div>

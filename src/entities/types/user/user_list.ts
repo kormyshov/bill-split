@@ -32,4 +32,8 @@ export class TUserList {
         return null;
     }
 
+    public clear(): void {
+        this.items = new Array<TUser>();
+    }
+
 }

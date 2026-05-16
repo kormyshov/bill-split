@@ -49,6 +49,7 @@ export default function CustomExpenseTab(props: any) {
       props.expenseName, 
       props.expenseAmount, 
       props.expenseCurrency, 
+      props.payerId,
       totals
     );
     setExpenseUpdateFlag(-1);

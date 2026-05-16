@@ -19,7 +19,7 @@ export default function EquallyExpenseTab(props: any) {
   const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
   const { setBalanceUpdateFlag } = useContext(BalanceUpdateFlagContext);
 
-  const [checkedList, setCheckedList] = useState<number[]>(props.groupMembers.getItems().map((member: TUser) => member.getId()));
+  const [checkedList, setCheckedList] = useState<number[]>([]);
 
   const handleChangeCheck = (checked: boolean, user_id: number) => {
     if (checked) {
@@ -47,6 +47,7 @@ export default function EquallyExpenseTab(props: any) {
       props.expenseName, 
       props.expenseAmount, 
       props.expenseCurrency, 
+      props.payerId,
       checkedList
     );
     setExpenseUpdateFlag(-1);

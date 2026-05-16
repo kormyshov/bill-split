@@ -12,9 +12,13 @@ import { getCommand } from '../../entities/upload/common';
 import { GroupListContext } from '../../app/App';
 import { ExpenseListContext } from '../../app/App';
 import { ExpenseUpdateFlagContext } from '../../app/App';
+import { MemberListContext } from '../../app/App';
+import { MemberUpdateFlagContext } from '../../app/App';
 import { TGroup } from '../../entities/types/group/group';
 import { TExpenseList } from '../../entities/types/expense/expense_list';
 import { TExpense } from '../../entities/types/expense/expense';
+import { TUserList } from '../../entities/types/user/user_list';
+import { TUser } from '../../entities/types/user/user';
 
 import { GRADIENTS } from '../../entities/data/gradients.ts';
 import { CURRENCIES } from '../../entities/data/currencies.ts';
@@ -32,9 +36,11 @@ export default function GroupInfo() {
   const { expenseList, setExpenseList } = useContext(ExpenseListContext);
   const { expenseUpdateFlag, setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const { memberList, setMemberList } = useContext(MemberListContext);
+  const { memberUpdateFlag, setMemberUpdateFlag } = useContext(MemberUpdateFlagContext);
 
+  useEffect(() => {
+    const fetchExpenseData = async () => {
       const response = await fetch(getCommand("groups/get_expense_list&group_id=" + groupId))
 
       const data = await response.json()
@@ -56,9 +62,30 @@ export default function GroupInfo() {
       setExpenseUpdateFlag(group.getId());
     }
 
-    if (expenseUpdateFlag !== group.getId()) fetchData();
+    const fetchMemberData = async () => {
+      const response = await fetch(getCommand("groups/get_member_list&group_id=" + groupId))
+
+      const data = await response.json()
+      console.log('Input member list:', data)
+      memberList.clear();
+      data.group_members.forEach((item: any) => {
+        const user = new TUser(
+          item[0],
+          item[1],
+          item[2],
+          item[3],
+          item[4]
+        );
+        memberList.addItem(user);
+      })
+      setMemberList(new TUserList(memberList.getItems()));
+      setMemberUpdateFlag(group.getId());
+    }
+
+    if (expenseUpdateFlag !== group.getId()) fetchExpenseData();
+    if (memberUpdateFlag !== group.getId()) fetchMemberData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expenseUpdateFlag]);
+  }, [expenseUpdateFlag, memberUpdateFlag]);
 
   const lst = expenseList.getItems().map(
     (expense) => 

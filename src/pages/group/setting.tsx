@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { TelegramShareButton } from "react-share";
@@ -7,16 +7,13 @@ import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
 import SlDialog from '@shoelace-style/shoelace/dist/react/dialog';
 import SlInput from '@shoelace-style/shoelace/dist/react/input';
-import SlSkeleton from '@shoelace-style/shoelace/dist/react/skeleton';
-
-import { getCommand } from '../../entities/upload/common';
 
 import { GroupListContext } from '../../app/App';
 import { GroupUpdateFlagContext } from '../../app/App';
 import { ExpenseListContext } from '../../app/App';
+import { MemberListContext } from '../../app/App';
 import { TGroup } from '../../entities/types/group/group';
 import { TUser } from '../../entities/types/user/user';
-import { TUserList } from '../../entities/types/user/user_list';
 import { changeGroupName, leaveGroup } from '../../entities/upload/groups';
 
 import { GRADIENTS } from '../../entities/data/gradients.ts';
@@ -36,7 +33,7 @@ export default function GroupSetting() {
 
   const { expenseList } = useContext(ExpenseListContext);
 
-  const [loading, setLoading] = useState(true);
+  const { memberList } = useContext(MemberListContext);
 
   const not_zero_totals = Object
     .values(CURRENCIES).map((value) => {
@@ -65,33 +62,6 @@ export default function GroupSetting() {
     setGroupUpdateFlag(true);
     navigate('/');
   }
-
-  const [groupMembers, setGroupMembers] = useState(new TUserList());
-
-  useEffect(() => {
-    const fetchData = async () => {
-
-      const response = await fetch(getCommand("groups/get_member_list&group_id=" + groupId))
-
-      const data = await response.json()
-      console.log('Input member list:', data)
-      data.group_members.forEach((item: any) => {
-        const user = new TUser(
-          item[0],
-          item[1],
-          item[2],
-          item[3],
-          item[4]
-        );
-        groupMembers.addItem(user);
-      })
-      setGroupMembers(new TUserList(groupMembers.getItems()));
-      setLoading(false);
-    }
-
-    fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <>
@@ -135,14 +105,7 @@ export default function GroupSetting() {
           Group members
         </h3>
         <ul>
-          { loading ?
-            <>
-              <SlSkeleton effect="sheen" style={{ height: '0.9rem', borderRadius: '0.2rem', width: '40%', marginBottom: '0.2rem' }} />
-              <SlSkeleton effect="sheen" style={{ height: '0.9rem', borderRadius: '0.2rem', width: '38%', marginBottom: '0.2rem' }} />
-              <SlSkeleton effect="sheen" style={{ height: '0.9rem', borderRadius: '0.2rem', width: '42%', marginBottom: '0.2rem' }} />
-            </>
-            :
-            groupMembers.getItems().map((member: TUser) => (
+          { memberList.getItems().map((member: TUser) => (
               <li key={member.getTelegramId()}>
                 {member.getFirstName()} {member.getLastName()}
               </li>
