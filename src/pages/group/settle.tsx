@@ -17,7 +17,7 @@ import { TBalanceList } from '../../entities/types/balance/balance_list';
 import { GRADIENTS } from '../../entities/data/gradients.ts';
 import { formatAmount } from '../../entities/utils/common.ts';
 import { TBalance } from '../../entities/types/balance/balance.ts';
-import { createDirectExpense } from '../../entities/upload/expenses.ts';
+import { createDirectExpense, optimizePayments } from '../../entities/upload/expenses.ts';
 
 
 export default function GroupSettle() {
@@ -91,6 +91,12 @@ export default function GroupSettle() {
     setDialogOpen(false);
   }
 
+  const handleOptimizePayments = () => {
+    optimizePayments(groupId || '');
+    setExpenseUpdateFlag(-1);
+    setBalanceUpdateFlag(-1);
+  }
+
   return (
     <>
 
@@ -114,7 +120,13 @@ export default function GroupSettle() {
               <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%' }} />
             </>
           :
-          balances.length > 0 ? balances : <p>All settled up!</p>
+          balances.length > 0 ? 
+            <>
+              {balances}
+              <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>{handleOptimizePayments()}}>Optimize</SlButton>
+            </>
+            : 
+            <p>All settled up!</p>
         }
       </div>
 

@@ -48,3 +48,13 @@ export const createDirectExpense = (groupId: string, amount: number, currency: n
 export const deleteExpense = (expenseId: number) => {
     fetch(getCommand("expenses/delete"), getRequestOptions(expenseId));
 }
+
+export const optimizePayments = (groupId: string) => {
+    fetch(getCommand("expenses/optimize"), getRequestOptions(
+        JSON.stringify(
+            {
+                group_id: groupId
+            }
+        ))
+    );
+}
