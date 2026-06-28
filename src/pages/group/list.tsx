@@ -65,6 +65,13 @@ export default function GroupList() {
       setGroupUpdateFlag(false);
     }
 
+    if (groupUpdateFlag) {
+      fetchData();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupUpdateFlag]);
+
+  useEffect(() => {
     const fetchAccountData = async () => {
 
       const response = await fetch(getCommand("account/get_info"))
@@ -82,21 +89,21 @@ export default function GroupList() {
       setAccountUpdateFlag(false);
     }
 
-    if (groupUpdateFlag) {
-      fetchData();
-    }
-
     if (accountUpdateFlag) {
       fetchAccountData();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupUpdateFlag, accountUpdateFlag]);
+  }, [accountUpdateFlag]);
 
   return (
     <>
       <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', top: 0, left: 0, width: '100%', height: '10rem', boxSizing: 'border-box' }}>
         <div style={{ padding: '1rem' }}>
-          {/* <SlIconButton name="person-circle" label="Account" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/account/info')} /> */}
+          { accountUpdateFlag ? 
+            <SlSkeleton effect="sheen" style={{ height: '2rem', width: '2rem', borderRadius: '1rem', float: 'left', marginBottom: '1.5rem' }} />
+            :
+            <SlIconButton name="person-circle" label="Account" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/account/info')} />
+          }
           <SlIconButton name="person-plus" label="Add group" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/new')} />
           <h2 style={{ clear: 'both' }}>Your groups</h2>
         </div>
