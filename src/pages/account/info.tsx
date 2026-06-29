@@ -39,6 +39,12 @@ export default function AccountInfo() {
               message: "You have upgraded to Bill Split Premium. Your payment was successful.",
               buttons: [{ type: "close", text: "Close" }],
             })
+          } else {
+            window.Telegram.WebApp.showPopup({
+              title: "Something went wrong",
+              message: "Payment failed with status: " + status,
+              buttons: [{ type: "close", text: "Close" }],
+            })
           }
         })
       })
