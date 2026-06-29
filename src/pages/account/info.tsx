@@ -40,9 +40,9 @@ export default function AccountInfo() {
           }
         })
       })
-      .then(() => {
-        navigate('/');
-      })
+      // .then(() => {
+      //   navigate('/');
+      // })
   }
 
   return (
