@@ -19,15 +19,7 @@ export default function AccountInfo() {
   const { account } = useContext(AccountContext);
   const { setAccountUpdateFlag } = useContext(AccountUpdateFlagContext);
 
-  const handleBuyPremium = /*async*/ (stars: number, days: number) => {
-    // const link = await createInvoiceLink(stars, days);
-    // console.log(link.result)
-    // window.Telegram.WebApp.openInvoice(link.result, (status: string) => {
-    //     if (status === "paid") {
-    //       paidPremium(days);
-    //       setAccountUpdateFlag(true)
-    //     }
-    // });
+  const handleBuyPremium = (stars: number, days: number) => {
     createInvoiceLink(stars, days)
       .then((link) => {
         window.Telegram.WebApp.openInvoice(link.result, (status: string) => {
@@ -96,26 +88,26 @@ export default function AccountInfo() {
             <SlButton 
               variant="primary" 
               style={{ marginBottom: '0.5rem', marginLeft: '0.5rem', width: '30%' }} 
-              onClick={() => handleBuyPremium(1, 10)}
+              onClick={() => handleBuyPremium(49, 10)}
             >
               <span style={{ display: 'block', marginBottom: '-15px' }} >10 days</span>
-              50 <SlIcon name='star-fill' style={{ fontSize: '14px', color: 'yellow' }} />
+              49 <SlIcon name='star-fill' style={{ fontSize: '14px', color: 'yellow' }} />
             </SlButton>
             <SlButton 
               variant="primary" 
               style={{ marginBottom: '0.5rem', marginLeft: '0.5rem', width: '30%' }} 
-              onClick={() => handleBuyPremium(1, 30)}
+              onClick={() => handleBuyPremium(99, 30)}
             >
               <span style={{ display: 'block', marginBottom: '-15px' }} >30 days</span>
-              100 <SlIcon name='star-fill' style={{ fontSize: '14px', color: 'yellow' }} />
+              99 <SlIcon name='star-fill' style={{ fontSize: '14px', color: 'yellow' }} />
             </SlButton>
             <SlButton 
               variant="primary" 
               style={{ marginBottom: '0.5rem', marginLeft: '0.5rem', width: '30%' }} 
-              onClick={() => handleBuyPremium(1, 365)}
+              onClick={() => handleBuyPremium(999, 365)}
             >
               <span style={{ display: 'block', marginBottom: '-15px' }} >365 days</span>
-              1000 <SlIcon name='star-fill' style={{ fontSize: '14px', color: 'yellow' }} />
+              999 <SlIcon name='star-fill' style={{ fontSize: '14px', color: 'yellow' }} />
             </SlButton>
           </div>
         </div>
