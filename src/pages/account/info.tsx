@@ -19,15 +19,29 @@ export default function AccountInfo() {
   const { account } = useContext(AccountContext);
   const { setAccountUpdateFlag } = useContext(AccountUpdateFlagContext);
 
-  const handleBuyPremium = async (stars: number, days: number) => {
-    const link = await createInvoiceLink(stars, days);
-    console.log(link.result)
-    window.Telegram.WebApp.openInvoice(link.result, (status: string) => {
-        if (status === "paid") {
-          paidPremium(days);
-          setAccountUpdateFlag(true)
-        }
-    });
+  const handleBuyPremium = /*async*/ (stars: number, days: number) => {
+    // const link = await createInvoiceLink(stars, days);
+    // console.log(link.result)
+    // window.Telegram.WebApp.openInvoice(link.result, (status: string) => {
+    //     if (status === "paid") {
+    //       paidPremium(days);
+    //       setAccountUpdateFlag(true)
+    //     }
+    // });
+    createInvoiceLink(stars, days)
+      .then((link) => {
+        window.Telegram.WebApp.openInvoice(link.result, (status: string) => {
+          if (status === "paid") {
+            paidPremium(days);
+            setAccountUpdateFlag(true);
+            window.Telegram.WebApp.showPopup({
+              title: "Welcome to Premium",
+              message: "You have upgraded to Bill Split Premium. Your payment was successful.",
+              buttons: [{ type: "close", text: "Close" }],
+            })
+          }
+        })
+      })
   }
 
   return (
