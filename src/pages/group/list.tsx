@@ -15,12 +15,13 @@ import { TGroup } from '../../entities/types/group/group.ts';
 import { TUser } from '../../entities/types/user/user.ts';
 
 import { GRADIENTS } from '../../entities/data/gradients.ts';
+import { TelegramWebApp } from '../../entities/utils/telegram.ts';
 
 export default function GroupList() {
 
   const navigate = useNavigate();
 
-  const param = window.Telegram.WebApp.initDataUnsafe.start_param;
+  const param = TelegramWebApp().initDataUnsafe.start_param;
 
   if (param) {
     navigate(`/connect/${param}`);

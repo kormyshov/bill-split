@@ -10,6 +10,7 @@ import SlIcon from '@shoelace-style/shoelace/dist/react/icon';
 import SlBadge from '@shoelace-style/shoelace/dist/react/badge';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
 import { createInvoiceLink, paidPremium } from '../../entities/upload/stars.ts';
+import { TelegramWebApp } from '../../entities/utils/telegram.ts';
 
 
 export default function AccountInfo() {
@@ -22,17 +23,17 @@ export default function AccountInfo() {
   const handleBuyPremium = (stars: number, days: number) => {
     createInvoiceLink(stars, days)
       .then((link) => {
-        window.Telegram.WebApp.openInvoice(link.result, (status: string) => {
+        TelegramWebApp().openInvoice(link.result, (status: string) => {
           if (status === "paid") {
             paidPremium(days);
             setAccountUpdateFlag(true);
-            window.Telegram.WebApp.showPopup({
+            TelegramWebApp().showPopup({
               title: "Welcome to Premium",
               message: "You have upgraded to Bill Split Premium. Your payment was successful.",
               buttons: [{ type: "close", text: "Close" }],
             })
           } else {
-            window.Telegram.WebApp.showPopup({
+            TelegramWebApp().showPopup({
               title: "Something went wrong",
               message: "Payment failed with status: " + status,
               buttons: [{ type: "close", text: "Close" }],

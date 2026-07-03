@@ -5,12 +5,13 @@ import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 
 import { joinToGroup } from '../entities/upload/groups.ts';
 import { GroupUpdateFlagContext } from '../app/App.tsx';
+import { TelegramWebApp } from '../entities/utils/telegram.ts';
 
 
 export default function Connect() {
 
   const { token } = useParams();
-  window.Telegram.WebApp.initDataUnsafe.start_param = "";
+  TelegramWebApp().initDataUnsafe.start_param = "";
 
   const navigate = useNavigate();
 
