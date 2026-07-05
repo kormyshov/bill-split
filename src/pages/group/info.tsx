@@ -24,6 +24,8 @@ import { GRADIENTS } from '../../entities/data/gradients.ts';
 import { CURRENCIES } from '../../entities/data/currencies.ts';
 import { formatAmount } from '../../entities/utils/common.ts';
 
+import PremiumButton from '../../widgets/premium_button.tsx';
+
 
 export default function GroupInfo() {
 
@@ -154,7 +156,8 @@ export default function GroupInfo() {
       </div>
 
       <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
-        <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>navigate('/groups/' + groupId + '/new_expense')}>Add expense</SlButton>
+        {/* <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>navigate('/groups/' + groupId + '/new_expense')}>Add expense</SlButton> */}
+        <PremiumButton onCLick={() => navigate('/groups/' + groupId + '/new_expense')} isLimitExceeded={lst.length > 49} title='Add expense' />
 
         <div style={{ marginTop: '1rem' }}>
           { expenseUpdateFlag !== group.getId() ?

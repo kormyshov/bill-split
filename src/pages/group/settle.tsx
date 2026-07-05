@@ -18,6 +18,7 @@ import { GRADIENTS } from '../../entities/data/gradients.ts';
 import { formatAmount } from '../../entities/utils/common.ts';
 import { TBalance } from '../../entities/types/balance/balance.ts';
 import { createDirectExpense, optimizePayments } from '../../entities/upload/expenses.ts';
+import PremiumButton from '../../widgets/premium_button.tsx';
 
 
 export default function GroupSettle() {
@@ -123,7 +124,8 @@ export default function GroupSettle() {
           balances.length > 0 ? 
             <>
               {balances}
-              <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>{handleOptimizePayments()}}>Optimize</SlButton>
+              {/* <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>{handleOptimizePayments()}}>Optimize</SlButton> */}
+              <PremiumButton onCLick={handleOptimizePayments} isLimitExceeded={true} title='Optimize' />
             </>
             : 
             <p>All settled up!</p>

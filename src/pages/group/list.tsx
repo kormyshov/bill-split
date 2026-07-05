@@ -17,6 +17,9 @@ import { TUser } from '../../entities/types/user/user.ts';
 import { GRADIENTS } from '../../entities/data/gradients.ts';
 import { TelegramWebApp } from '../../entities/utils/telegram.ts';
 
+import PremiumButton from '../../widgets/premium_button.tsx';
+
+
 export default function GroupList() {
 
   const navigate = useNavigate();
@@ -105,7 +108,7 @@ export default function GroupList() {
             :
             <SlIconButton name="person-circle" label="Account" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/account/info')} />
           }
-          <SlIconButton name="person-plus" label="Add group" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/new')} />
+          {/* <SlIconButton name="person-plus" label="Add group" style={{ fontSize: '1.5rem', float: 'right' }} onClick={()=>navigate('/groups/new')} /> */}
           <h2 style={{ clear: 'both' }}>Your groups</h2>
         </div>
       </div>
@@ -116,15 +119,19 @@ export default function GroupList() {
         </div>
         :
         <div style={{ left: 0, width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
-          { lst.length > 0 ?
-            lst :
-            <div style={{ padding: '1rem', marginTop: '-8rem', textAlign: 'center' }}>
-              <img src='arrow.png' width='60%' style={{ marginLeft: '10rem' }} alt='arrow to button' /><br/>
-              You have no groups yet.<br/><br/>
-              Click the button to create your first group<br/>
-              or join an existing one.
-            </div>
-          }
+          <PremiumButton onCLick={() => navigate('/groups/new')} isLimitExceeded={lst.length > 9} title='New group' />
+          
+          <div style={{ marginTop: '1rem' }}>
+            { lst.length == 0 ?
+              lst :
+              <div style={{ padding: '1rem', marginTop: '1rem', textAlign: 'center' }}>
+                {/* <img src='arrow.png' width='60%' style={{ marginLeft: '10rem' }} alt='arrow to button' /><br/> */}
+                You have no groups yet.<br/><br/>
+                Click the button to create your first group<br/>
+                or join an existing one.
+              </div>
+            }
+          </div>
         </div>
       }
     </>
