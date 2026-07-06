@@ -122,7 +122,7 @@ export default function GroupList() {
           <PremiumButton onCLick={() => navigate('/groups/new')} isLimitExceeded={lst.length > 9} title='New group' />
           
           <div style={{ marginTop: '1rem' }}>
-            { lst.length === 0 ?
+            { lst.length > 0 ?
               lst :
               <div style={{ padding: '1rem', marginTop: '1rem', textAlign: 'center' }}>
                 {/* <img src='arrow.png' width='60%' style={{ marginLeft: '10rem' }} alt='arrow to button' /><br/> */}
