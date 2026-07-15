@@ -86,6 +86,11 @@ export default function AccountInfo() {
               <span style={{ fontSize: '16px', marginLeft: '10px', marginTop: '5px', float: 'left' }} >Optimize payments</span>
               <div style={{ clear: 'both' }} ></div>
             </div>
+            <div style={{ margin: '10px' }}>
+              <SlIcon name='currency-exchange' style={{ fontSize: '24px', color: '#444', float: 'left' }} />
+              <span style={{ fontSize: '16px', marginLeft: '10px', marginTop: '5px', float: 'left' }} >Convert to target currency</span>
+              <div style={{ clear: 'both' }} ></div>
+            </div>
           </div>
           <div>
             <hr />
