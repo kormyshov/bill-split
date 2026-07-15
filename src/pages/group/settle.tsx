@@ -6,6 +6,8 @@ import SlCard from '@shoelace-style/shoelace/dist/react/card';
 import SlSkeleton from '@shoelace-style/shoelace/dist/react/skeleton';
 import SlDialog from '@shoelace-style/shoelace/dist/react/dialog';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
+import SlSelect from '@shoelace-style/shoelace/dist/react/select';
+import SlOption from '@shoelace-style/shoelace/dist/react/option';
 
 import { getCommand } from '../../entities/upload/common';
 
@@ -15,9 +17,11 @@ import { TGroup } from '../../entities/types/group/group';
 import { TBalanceList } from '../../entities/types/balance/balance_list';
 
 import { GRADIENTS } from '../../entities/data/gradients.ts';
+import { CURRENCIES } from '../../entities/data/currencies.ts';
 import { formatAmount } from '../../entities/utils/common.ts';
 import { TBalance } from '../../entities/types/balance/balance.ts';
 import { createDirectExpense, optimizePayments } from '../../entities/upload/expenses.ts';
+import { getRates } from '../../entities/upload/rates.ts';
 import PremiumButton from '../../widgets/premium_button.tsx';
 
 
@@ -32,6 +36,25 @@ export default function GroupSettle() {
   const { balanceList, setBalanceList } = useContext(BalanceListContext);
   const { balanceUpdateFlag, setBalanceUpdateFlag } = useContext(BalanceUpdateFlagContext);
   const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
+
+  const [convertMode, setConvertMode] = useState(false);
+  const [targetCurrency, setTargetCurrency] = useState<{ id: number; code: string } | null>(null);
+  const [convertedBalances, setConvertedBalances] = useState<Array<{
+    userId: number;
+    name: string;
+    amount: number;
+    sourceBalances: TBalance[];
+  }>>([]);
+  const [selectedCurrencyForConvert, setSelectedCurrencyForConvert] = useState('');
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedBalance, setSelectedBalance] = useState<TBalance | null>(null);
+  const [selectedConvertedBalance, setSelectedConvertedBalance] = useState<{
+    userId: number;
+    name: string;
+    amount: number;
+    sourceBalances: TBalance[];
+  } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,21 +82,6 @@ export default function GroupSettle() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [balanceUpdateFlag]);
 
-  const balances = balanceList.getItems().map(
-    (balance) => 
-      <SlCard style={{ width: '100%', marginBottom: '1rem' }} onClick={() => handleOpenDialog(balance)}>
-        <b>{balance.getFirstAndLastName()}</b>
-        <span
-          {...(balance.getAmount() < 0 ? { style: {color: 'red', float: 'right' } } : { style: {color: 'green', float: 'right' } })}
-        >
-          {balance.getAmountFormatted()}
-        </span>
-      </SlCard>
-  );
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedBalance, setSelectedBalance] = useState<TBalance | null>(null);
-
   const handleOpenDialog = (balance: TBalance) => {
     setSelectedBalance(balance);
     setDialogOpen(true)
@@ -98,6 +106,109 @@ export default function GroupSettle() {
     setBalanceUpdateFlag(-1);
   }
 
+  const handleConvert = async () => {
+    if (!selectedCurrencyForConvert) return;
+
+    const targetId = Number(selectedCurrencyForConvert);
+    const targetCode = CURRENCIES[selectedCurrencyForConvert];
+
+    const response = await getRates(targetId);
+    const data = await response.json();
+    const rates: Record<number, number> = data.rates;
+    console.log('Rates:', rates);
+
+    const userMap = new Map<number, { name: string; amount: number; sourceBalances: TBalance[] }>();
+
+    balanceList.getItems().forEach((balance) => {
+      const rate = rates[balance.getCurrency()];
+      if (rate === undefined) return;
+
+      const convertedAmount = Math.round(balance.getAmount() / rate);
+      if (convertedAmount === 0) return;
+
+      const userId = balance.getUserId();
+      const existing = userMap.get(userId);
+      if (existing) {
+        existing.amount += convertedAmount;
+        existing.sourceBalances.push(balance);
+      } else {
+        userMap.set(userId, {
+          name: balance.getFirstAndLastName(),
+          amount: convertedAmount,
+          sourceBalances: [balance],
+        });
+      }
+    });
+
+    const result = Array.from(userMap.entries())
+      .filter(([_, v]) => v.amount !== 0)
+      .map(([userId, v]) => ({ userId, ...v }));
+
+    setConvertedBalances(result);
+    setTargetCurrency({ id: targetId, code: targetCode });
+    setConvertMode(true);
+  }
+
+  const handleResetConvert = () => {
+    setConvertMode(false);
+    setTargetCurrency(null);
+    setConvertedBalances([]);
+  }
+
+  const handleOpenConvertedDialog = (item: typeof convertedBalances[0]) => {
+    setSelectedConvertedBalance(item);
+    setDialogOpen(true);
+  }
+
+  const handleCreateConvertedPayment = () => {
+    if (!selectedConvertedBalance) return;
+
+    selectedConvertedBalance.sourceBalances.forEach((balance) => {
+      createDirectExpense(
+        groupId || '',
+        balance.getAmount(),
+        balance.getCurrency(),
+        balance.getUserId(),
+        balance.getFirstAndLastName()
+      );
+    });
+
+    setExpenseUpdateFlag(-1);
+    setBalanceUpdateFlag(-1);
+    setDialogOpen(false);
+    setConvertMode(false);
+    setTargetCurrency(null);
+    setConvertedBalances([]);
+    setSelectedConvertedBalance(null);
+  }
+
+  const originalBalances = balanceList.getItems().map(
+    (balance) =>
+      <SlCard key={`${balance.getUserId()}-${balance.getCurrency()}`} style={{ width: '100%', marginBottom: '1rem' }} onClick={() => handleOpenDialog(balance)}>
+        <b>{balance.getFirstAndLastName()}</b>
+        <span
+          {...(balance.getAmount() < 0 ? { style: {color: 'red', float: 'right' } } : { style: {color: 'green', float: 'right' } })}
+        >
+          {balance.getAmountFormatted()}
+        </span>
+      </SlCard>
+  );
+
+
+
+  const convertedCards = convertedBalances.map((item) => (
+    <SlCard key={`conv-${item.userId}`} style={{ width: '100%', marginBottom: '1rem' }} onClick={() => handleOpenConvertedDialog(item)}>
+      <b>{item.name}</b>
+      <span
+        {...(item.amount < 0 ? { style: {color: 'red', float: 'right' } } : { style: {color: 'green', float: 'right' } })}
+      >
+        {formatAmount(item.amount, targetCurrency?.code || '')}
+      </span>
+    </SlCard>
+  ));
+
+  const dialogLabel = convertMode ? `Converted to ${targetCurrency?.code || ''}` : 'Record a payment';
+
   return (
     <>
 
@@ -121,29 +232,70 @@ export default function GroupSettle() {
               <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%' }} />
             </>
           :
-          balances.length > 0 ? 
+          convertMode && convertedBalances.length > 0 ?
+          <>
+            <small>Showing balances converted to <b>{targetCurrency?.code}</b></small>
+            <div style={{ height: '0.5rem' }} />
+            {convertedCards}
+            <SlButton variant="primary" style={{ width: '100%' }} onClick={handleResetConvert}>Reset</SlButton>
+          </>
+          :
+          convertMode && convertedBalances.length === 0 ?
+          <>
+            <p>All settled up!</p>
+            <SlButton variant="primary" style={{ width: '100%' }} onClick={handleResetConvert}>Reset</SlButton>
+          </>
+          :
+          originalBalances.length > 0 ?
             <>
-              {balances}
-              {/* <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>{handleOptimizePayments()}}>Optimize</SlButton> */}
-              <PremiumButton onCLick={handleOptimizePayments} isLimitExceeded={true} title='Optimize' />
+              {originalBalances}
+              <div style={{ marginBottom: '0.5rem' }}>
+                <PremiumButton onCLick={handleOptimizePayments} isLimitExceeded={true} title='Optimize' />
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ width: '200px', flexShrink: 0 }}>
+                  <PremiumButton onCLick={handleConvert} isLimitExceeded={true} title='Convert to' />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <SlSelect
+                    value={selectedCurrencyForConvert}
+                    placeholder="Currency"
+                    onSlChange={(e) => setSelectedCurrencyForConvert((e.target as HTMLSelectElement).value)}
+                  >
+                    {Object.entries(CURRENCIES).map(([key, value]) => (
+                      <SlOption key={key} value={key}>{value}</SlOption>
+                    ))}
+                  </SlSelect>
+                </div>
+              </div>
             </>
-            : 
+            :
             <p>All settled up!</p>
         }
       </div>
 
-      <SlDialog label="Record a payment" open={dialogOpen} onSlAfterHide={() => setDialogOpen(false)}>
-        { selectedBalance ? (
+      <SlDialog label={dialogLabel} open={dialogOpen} onSlAfterHide={() => {
+        setDialogOpen(false);
+        setSelectedConvertedBalance(null);
+      }}>
+        { convertMode && selectedConvertedBalance ? (
+          selectedConvertedBalance.amount < 0 ?
+            <>You paid <b>{selectedConvertedBalance.name}</b> {formatAmount(-selectedConvertedBalance.amount, targetCurrency?.code || '')}?</>
+          :
+            <><b>{selectedConvertedBalance.name}</b> paid you {formatAmount(selectedConvertedBalance.amount, targetCurrency?.code || '')}?</>
+        ) : !convertMode && selectedBalance ? (
           selectedBalance.getAmount() < 0 ?
             <>You paid <b>{selectedBalance.getFirstAndLastName()}</b> {formatAmount(-selectedBalance.getAmount(), selectedBalance.getCurrencySymbol())}?</>
           :
             <><b>{selectedBalance.getFirstAndLastName()}</b> paid you {selectedBalance?.getAmountFormatted()}?</>
-          ) : null
-        }
-        <SlButton slot="footer" variant="neutral" onClick={() => setDialogOpen(false)}>
+        ) : null }
+        <SlButton slot="footer" variant="neutral" onClick={() => {
+          setDialogOpen(false);
+          setSelectedConvertedBalance(null);
+        }}>
           Cancel
         </SlButton>
-        <SlButton slot="footer" variant="success" onClick={() => handleCreatePayment()}>
+        <SlButton slot="footer" variant="success" onClick={convertMode ? handleCreateConvertedPayment : handleCreatePayment}>
           Save
         </SlButton>
       </SlDialog>
