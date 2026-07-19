@@ -12,7 +12,8 @@ export const createInvoiceLink = async (stars: number, days: number) => {
     );
 
     const data = await response.json();
-    return data["invoice_link"];
+    console.log('data', data)
+    return JSON.parse(data["invoice_link"]);
 }
 
 export const paidPremium = (days: number) => {
