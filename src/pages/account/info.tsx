@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { AccountContext } from '../../app/App.tsx';
@@ -9,16 +9,55 @@ import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
 import SlIcon from '@shoelace-style/shoelace/dist/react/icon';
 import SlBadge from '@shoelace-style/shoelace/dist/react/badge';
 import SlButton from '@shoelace-style/shoelace/dist/react/button';
+import SlDialog from '@shoelace-style/shoelace/dist/react/dialog';
+import SlInput from '@shoelace-style/shoelace/dist/react/input';
 import { createInvoiceLink, paidPremium } from '../../entities/upload/stars.ts';
+import { deletePhone, setPhone } from '../../entities/upload/phone.ts';
 import { TelegramWebApp } from '../../entities/utils/telegram.ts';
+import { TUser } from '../../entities/types/user/user.ts';
 
 
 export default function AccountInfo() {
 
   const navigate = useNavigate();
 
-  const { account } = useContext(AccountContext);
+  const { account, setAccount } = useContext(AccountContext);
   const { setAccountUpdateFlag } = useContext(AccountUpdateFlagContext);
+  const [phone, setPhoneValue] = useState(account.getPhone());
+  const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
+  const [isPhoneSaving, setIsPhoneSaving] = useState(false);
+
+  const updateAccountPhone = (newPhone: string) => {
+    setAccount(new TUser(
+      account.getId(),
+      account.getTelegramId(),
+      account.getFirstName(),
+      account.getLastName(),
+      account.getExpiredDate(),
+      newPhone
+    ));
+  }
+
+  const handleSavePhone = async () => {
+    setIsPhoneSaving(true);
+    await setPhone(phone);
+    updateAccountPhone(phone);
+    setPhoneDialogOpen(false);
+    setIsPhoneSaving(false);
+  }
+
+  const handleDeletePhone = async () => {
+    setIsPhoneSaving(true);
+    await deletePhone();
+    setPhoneValue('');
+    updateAccountPhone('');
+    setIsPhoneSaving(false);
+  }
+
+  const handleOpenPhoneDialog = () => {
+    setPhoneValue(account.getPhone());
+    setPhoneDialogOpen(true);
+  }
 
   const handleBuyPremium = (stars: number, days: number) => {
     createInvoiceLink(stars, days)
@@ -56,6 +95,23 @@ export default function AccountInfo() {
           </div>
           <div style={{ float: 'left' }}>
             <h2 style={{ marginBottom: '0px' }}>{account.getFirstName()} {account.getLastName()}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', minHeight: '2rem' }}>
+              {account.getPhone() && <SlBadge variant="neutral">{account.getPhone()}</SlBadge>}
+              <SlIconButton
+                name={account.getPhone() ? 'pencil' : 'telephone-plus'}
+                label={account.getPhone() ? 'Edit phone number' : 'Add phone number'}
+                disabled={isPhoneSaving}
+                onClick={handleOpenPhoneDialog}
+              />
+              {account.getPhone() &&
+                <SlIconButton
+                  name="trash3"
+                  label="Delete phone number"
+                  disabled={isPhoneSaving}
+                  onClick={handleDeletePhone}
+                />
+              }
+            </div>
             { account.isPremium() ?
               <SlBadge variant="neutral">Premium until&nbsp;<SlFormatDate month="long" day="numeric" year="numeric" date={account.getExpiredDate()}/></SlBadge>
               :
@@ -66,6 +122,27 @@ export default function AccountInfo() {
       </div>
 
       <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
+        <SlDialog label="Phone number" open={phoneDialogOpen} onSlAfterHide={() => setPhoneDialogOpen(false)}>
+          <SlInput
+            type="tel"
+            value={phone}
+            placeholder="Enter your phone number"
+            onSlInput={(e) => setPhoneValue((e.target as HTMLInputElement).value)}
+          />
+          <SlButton slot="footer" variant="neutral" disabled={isPhoneSaving} onClick={() => setPhoneDialogOpen(false)}>
+            Cancel
+          </SlButton>
+          <SlButton
+            slot="footer"
+            variant="success"
+            loading={isPhoneSaving}
+            disabled={isPhoneSaving}
+            onClick={handleSavePhone}
+          >
+            Save
+          </SlButton>
+        </SlDialog>
+
         <div style={{ width: '100%', paddingBottom: '0px', border: 'solid 1px #444', borderRadius: '8px' }}>
           <div style={{ backgroundColor: '#444', padding: '10px', marginTop: '0px', borderTopLeftRadius: '7px', borderTopRightRadius: '7px' }}>
             <span style={{ fontWeight: 'bold', color: '#fff' }}>Premium</span>

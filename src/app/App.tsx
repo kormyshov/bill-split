@@ -82,7 +82,7 @@ export const BalanceUpdateFlagContext = React.createContext(
 
 export const AccountContext = React.createContext(
   {
-    account: new TUser(-1, '', '', '', ''),
+    account: new TUser(-1, '', '', '', '', ''),
     setAccount: (account: TUser) => {}
   }
 );
@@ -120,7 +120,7 @@ export default function App() {
   const [balanceUpdateFlag, setBalanceUpdateFlag] = useState(-1);
   const balanceUpdateFlagValue = useMemo(() => ({balanceUpdateFlag, setBalanceUpdateFlag}), [balanceUpdateFlag]);
 
-  const [account, setAccount] = useState(new TUser(-1, '', '', '', ''));
+  const [account, setAccount] = useState(new TUser(-1, '', '', '', '', ''));
   const accountValue = useMemo(() => ({account, setAccount}), [account]);
 
   const [accountUpdateFlag, setAccountUpdateFlag] = useState(true);
