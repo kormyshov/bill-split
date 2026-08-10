@@ -1,28 +1,25 @@
 import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import SlButton from '@shoelace-style/shoelace/dist/react/button';
-
 import { AccountContext } from '../app/App';
-import SlIcon from '@shoelace-style/shoelace/dist/react/icon';
-
+import { haptic } from '../entities/utils/telegram';
+import { Icon, PrimaryButton } from './telegram-ui';
 
 export default function PremiumButton(props: any) {
-
   const navigate = useNavigate();
-
   const { account } = useContext(AccountContext);
+  const locked = !account.isPremium() && props.isLimitExceeded;
+
+  const handleClick = () => {
+    haptic('selection');
+    if (locked) navigate('/account/info');
+    else props.onCLick();
+  };
 
   return (
-    <>
-      { account.isPremium() || !props.isLimitExceeded ?
-          <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>{props.onCLick()}}>{props.title}</SlButton>
-        :
-          <SlButton variant="primary" style={{ width: '100%' }} onClick={()=>navigate('/account/info')}>
-            <SlIcon name='coin' style={{ marginRight: '5px' }} />
-            {props.title}
-          </SlButton> 
-      }
-    </>
+    <PrimaryButton onClick={handleClick} className={props.className || ''}>
+      {locked && <Icon name="star" size={17} />}
+      {props.title}
+    </PrimaryButton>
   );
 }

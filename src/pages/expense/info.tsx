@@ -1,125 +1,105 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-
-import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
-import SlCard from '@shoelace-style/shoelace/dist/react/card';
-import SlFormatDate from '@shoelace-style/shoelace/dist/react/format-date';
-import SlButton from '@shoelace-style/shoelace/dist/react/button';
-import SlSkeleton from '@shoelace-style/shoelace/dist/react/skeleton';
+import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { BalanceUpdateFlagContext, ExpenseUpdateFlagContext } from '../../app/App';
-
 import { TDebtList } from '../../entities/types/debt/debt_list';
 import { TDebt } from '../../entities/types/debt/debt';
 import { getCommand } from '../../entities/upload/common';
 import { deleteExpense } from '../../entities/upload/expenses';
+import { haptic } from '../../entities/utils/telegram';
+import { Avatar, GroupedList, Icon, ListRow, Modal, PrimaryButton, SkeletonRows, TopBar } from '../../widgets/telegram-ui';
 
+function fullDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+}
 
 export default function ExpenseInfo() {
-
-  const { groupId } = useParams();
-  const { expenseId } = useParams();
-
+  const { groupId, expenseId } = useParams();
+  const navigate = useNavigate();
   const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
   const { setBalanceUpdateFlag } = useContext(BalanceUpdateFlagContext);
-
-  const navigate = useNavigate();
-
   const [expenseDebts, setExpenseDebts] = useState(new TDebtList());
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
-
-      const response = await fetch(getCommand("expenses/get_debt_list&expense_id=" + expenseId))
-
-      const data = await response.json()
-      console.log('Input debt list:', data)
-      data.expense_debts.forEach((item: any) => {
-        const expense = new TDebt(
-          item[0],
-          item[1],
-          item[2],
-          item[3],
-          item[4],
-          item[5],
-          item[6],
-          item[7]
-        );
-        expenseDebts.addItem(expense);
-      })
-      setExpenseDebts(new TDebtList(expenseDebts.getItems()));
+      const response = await fetch(getCommand(`expenses/get_debt_list&expense_id=${expenseId}`));
+      const data = await response.json();
+      const debts = new TDebtList();
+      data.expense_debts.forEach((item: any) => debts.addItem(new TDebt(item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[7])));
+      setExpenseDebts(debts);
       setLoading(false);
-    }
-
+    };
     fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [expenseId]);
 
-  const lst = expenseDebts.getItems().map(
-    (debt) => 
-      <SlCard key={debt.getId()} style={{ width: '100%', marginBottom: '1rem' }}>
-        <b>{debt.getFirstAndLastName()}</b>
-        <span style={{ float: 'right' }}>{debt.getDebtAmountFormatted()}</span>
-      </SlCard>
-  );
+  const performDelete = async () => {
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const response = await deleteExpense(Number(expenseId));
+      if (!response.ok) throw new Error(`Delete failed with status ${response.status}`);
+      setExpenseUpdateFlag(-1);
+      setBalanceUpdateFlag(-1);
+      haptic('warning');
+      navigate(`/groups/${groupId}`);
+    } catch (_) {
+      setDeleteError('Could not delete this expense. Please try again.');
+      haptic('error');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
-  const handleDeleteExpense = () => {
-    deleteExpense(Number(expenseId));
-    setExpenseUpdateFlag(-1);
-    setBalanceUpdateFlag(-1);
-    navigate('/groups/' + groupId);
-  }
-
-  const expenseName = expenseDebts.getItems()[0]?.getExpenseName() || 'Expense Info';
-  const expenseTotalAmount = expenseDebts.getItems()[0]?.getTotalAmountFormatted() || '';
-  const paidBy = expenseDebts.getItems()[0]?.getPaidByFirstAndLastName() || '';
-  const createdAt = expenseDebts.getItems()[0]?.getCreatedAt() || '';
+  const debts = expenseDebts.getItems();
+  const expense = debts[0];
+  const expenseName = expense?.getExpenseName() || 'Expense details';
 
   return (
-    <>
-      <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', width: '100%', height: '12rem', boxSizing: 'border-box' }}>
-        <div style={{ padding: '1rem' }}>
-          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/groups/' + groupId)} />
-          { loading ?
-            <>
-              <div style={{ marginTop: '1rem' }}>
-                <SlSkeleton effect="sheen" style={{ height: '2rem',  width: '38%', float: 'left', marginBottom: '0.4rem' }} />
-                <SlSkeleton effect="sheen" style={{ height: '2rem',  width: '30%', float: 'right' }} />
-                <SlSkeleton effect="sheen" style={{ height: '1rem',  width: '45%', clear: 'both', marginBottom: '0.2rem' }} />
-                <SlSkeleton effect="sheen" style={{ height: '1rem',  width: '40%', clear: 'both', marginBottom: '0.4rem' }} />
+    <main className="tg-page">
+      <TopBar title="Expense details" onBack={() => navigate(`/groups/${groupId}`)} />
+      {loading ? <div className="tg-page-content is-padded-top"><SkeletonRows count={4} /></div> : (
+        <>
+          <section className="tg-detail-hero">
+            <span className="tg-expense-icon" style={{ width: 48, height: 48 }}><Icon name="receipt" size={24} /></span>
+            <div><h2>{expenseName}</h2><span className="tg-detail-amount">{expense?.getTotalAmountFormatted()}</span></div>
+          </section>
+
+          <div className="tg-page-content">
+            <GroupedList>
+              <div className="tg-detail-grid">
+                <span>Paid by</span><strong>{expense?.getPaidByFirstAndLastName()}</strong>
+                <span>Date</span><span>{fullDate(expense?.getCreatedAt() || '')}</span>
               </div>
-            </>
-            :
-            <>
-              <h2 style={{ marginBottom: '0px' }}>
-                <span>{expenseName}</span>
-                <span style={{ float: 'right' }}>{expenseTotalAmount}</span>
-              </h2>
-              <span>paid by {paidBy}</span><br />
-              <span>at <SlFormatDate month="long" day="numeric" year="numeric" date={createdAt}/></span>
-            </>
-          }
-        </div>
-      </div>
-      <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
-        { loading ?
-          <div style={{ left: 0, width: '100%', boxSizing: 'border-box' }}>
-            <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%', marginBottom: '1rem' }} />
-            <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%' }} />
+            </GroupedList>
+
+            <h2 className="tg-section-title">Participants</h2>
+            <GroupedList>
+              {debts.map(debt => {
+                const name = debt.getFirstAndLastName();
+                return <ListRow key={debt.getId()} avatar={<Avatar name={name} size="sm" />} title={name} value={debt.getDebtAmountFormatted()} />;
+              })}
+            </GroupedList>
+
+            <div className="tg-sticky-action"><PrimaryButton destructive onClick={() => { setDeleteError(''); setDeleteDialogOpen(true); }}><Icon name="trash" size={18} /> Delete expense</PrimaryButton></div>
           </div>
-        :
-          lst
-        }
-        <SlButton 
-          variant="danger" 
-          style={{ marginTop: '2rem', width: '100%' }} 
-          onClick={() => handleDeleteExpense()} 
-          outline
-        >
-          Delete expense
-        </SlButton>
-      </div>
-    </>
+        </>
+      )}
+
+      <Modal
+        open={deleteDialogOpen}
+        title="Delete expense?"
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
+        footer={<><PrimaryButton outline disabled={deleting} onClick={() => setDeleteDialogOpen(false)}>Cancel</PrimaryButton><PrimaryButton destructive disabled={deleting} onClick={performDelete}>{deleting ? 'Deleting…' : 'Delete'}</PrimaryButton></>}
+      >
+        <p>This expense and its participant balances will be removed.</p>
+        {deleteError && <p className="tg-action-error">{deleteError}</p>}
+      </Modal>
+    </main>
   );
 }

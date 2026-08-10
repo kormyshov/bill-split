@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Route, Routes } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from 'react';
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
 import GroupList from "../pages/group/list.tsx";
 import NewGroup from "../pages/group/new.tsx";
@@ -10,10 +10,10 @@ import NewExpense from "../pages/expense/new.tsx";
 import GroupSettle from "../pages/group/settle.tsx";
 import Connect from "../pages/connect.tsx";
 import AccountInfo from '../pages/account/info.tsx';
+import NotFound from '../pages/not_found.tsx';
 
 import './App.css';
 
-import '@shoelace-style/shoelace/dist/themes/dark.css';
 import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.js';
 
 import { TGroupList } from '../entities/types/group/group_list.ts';
@@ -21,8 +21,57 @@ import { TExpenseList } from '../entities/types/expense/expense_list.ts';
 import { TBalanceList } from '../entities/types/balance/balance_list.ts';
 import { TUser } from '../entities/types/user/user.ts';
 import { TUserList } from '../entities/types/user/user_list.ts';
+import { TelegramWebApp } from '../entities/utils/telegram.ts';
+import { getCommand } from '../entities/upload/common.ts';
+import { TGroup } from '../entities/types/group/group.ts';
 
 setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/');
+
+function TelegramRuntime() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const webApp = TelegramWebApp();
+    const isTelegram = Boolean(webApp.initData);
+
+    document.documentElement.classList.toggle('telegram-runtime', isTelegram);
+    if (isTelegram) {
+      webApp.ready?.();
+      webApp.expand?.();
+
+      try {
+        webApp.setHeaderColor?.('bg_color');
+        webApp.setBackgroundColor?.('bg_color');
+        webApp.setBottomBarColor?.('bg_color');
+      } catch (_) {
+        // Older Telegram clients may not support every color method.
+      }
+    }
+
+    return () => document.documentElement.classList.remove('telegram-runtime');
+  }, []);
+
+  useEffect(() => {
+    const webApp = TelegramWebApp();
+    if (!webApp.initData) return;
+    const goBack = () => {
+      if (window.history.length > 1) navigate(-1);
+      else navigate('/');
+    };
+
+    if (location.pathname === '/') {
+      webApp.BackButton?.hide?.();
+    } else {
+      webApp.BackButton?.show?.();
+      webApp.BackButton?.onClick?.(goBack);
+    }
+
+    return () => webApp.BackButton?.offClick?.(goBack);
+  }, [location.pathname, navigate]);
+
+  return null;
+}
 
 export const GroupListContext = React.createContext(
   {
@@ -126,6 +175,40 @@ export default function App() {
   const [accountUpdateFlag, setAccountUpdateFlag] = useState(true);
   const accountUpdateFlagValue = useMemo(() => ({accountUpdateFlag, setAccountUpdateFlag}), [accountUpdateFlag]);
 
+  useEffect(() => {
+    if (!groupUpdateFlag) return;
+
+    const fetchGroups = async () => {
+      try {
+        const response = await fetch(getCommand('groups/get_list'));
+        const data = await response.json();
+        const groups = new TGroupList();
+        data.groups.forEach((item: any) => groups.addItem(new TGroup(item[0], item[1], item[2], item[3], item[4], item[5])));
+        setGroupList(groups);
+      } finally {
+        setGroupUpdateFlag(false);
+      }
+    };
+
+    fetchGroups();
+  }, [groupUpdateFlag]);
+
+  useEffect(() => {
+    if (!accountUpdateFlag) return;
+
+    const fetchAccount = async () => {
+      try {
+        const response = await fetch(getCommand('account/get_info'));
+        const data = await response.json();
+        setAccount(new TUser(data.account[0], data.account[1], data.account[2], data.account[3], data.account[4], data.account[5]));
+      } finally {
+        setAccountUpdateFlag(false);
+      }
+    };
+
+    fetchAccount();
+  }, [accountUpdateFlag]);
+
   return (
     <div id="app" className="App">
       <GroupListContext.Provider value={groupListValue}>
@@ -138,6 +221,7 @@ export default function App() {
       <BalanceUpdateFlagContext.Provider value={balanceUpdateFlagValue}>
       <AccountContext.Provider value={accountValue}>
       <AccountUpdateFlagContext.Provider value={accountUpdateFlagValue}>
+        <TelegramRuntime />
         <Routes>
           <Route index element={<GroupList />} />
           <Route path="/">
@@ -155,6 +239,7 @@ export default function App() {
             <Route path="info" element={<AccountInfo />} />
           </Route>
           <Route path="connect/:token" element={<Connect />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AccountUpdateFlagContext.Provider>
       </AccountContext.Provider>

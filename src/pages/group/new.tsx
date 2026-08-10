@@ -1,80 +1,59 @@
-import { useState, useContext } from 'react';
+import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import SlInput from '@shoelace-style/shoelace/dist/react/input';
-import SlButton from '@shoelace-style/shoelace/dist/react/button';
-import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
-import SlDivider from '@shoelace-style/shoelace/dist/react/divider';
-
-import { createGroup, joinToGroup } from '../../entities/upload/groups.ts';
-import { GroupListContext } from '../../app/App.tsx';
-import { GroupUpdateFlagContext } from '../../app/App.tsx';
-
+import { createGroup, joinToGroup } from '../../entities/upload/groups';
+import { GroupListContext, GroupUpdateFlagContext } from '../../app/App';
+import { haptic } from '../../entities/utils/telegram';
+import { GroupedList, PrimaryButton, TopBar } from '../../widgets/telegram-ui';
 
 export default function NewGroup() {
-
   const navigate = useNavigate();
   const [groupName, setGroupName] = useState('');
   const [groupToken, setGroupToken] = useState('');
-
   const { groupList } = useContext(GroupListContext);
   const { setGroupUpdateFlag } = useContext(GroupUpdateFlagContext);
 
-  const handleCreateGroup = (groupName: string) => {
-    createGroup(groupName);
+  const handleCreateGroup = () => {
+    if (!groupName.trim()) return;
+    createGroup(groupName.trim());
     setGroupUpdateFlag(true);
+    haptic('success');
     navigate('/');
-  }
+  };
 
-  const handleJoinToGroup = (groupToken: string) => {
-    joinToGroup(groupToken);
+  const handleJoinGroup = () => {
+    if (!groupToken.trim() || groupList.containsToken(groupToken.trim())) return;
+    joinToGroup(groupToken.trim());
     setGroupUpdateFlag(true);
+    haptic('success');
     navigate('/');
-  }
+  };
+
+  const tokenAlreadyUsed = Boolean(groupToken.trim()) && groupList.containsToken(groupToken.trim());
 
   return (
-    <>
-      <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', width: '100%', height: '100vh', boxSizing: 'border-box' }}>
-        <div style={{ padding: '1rem' }}>
-          <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/')} />
-          <h2>Create new group</h2>
-          <SlInput
-            placeholder="Group name"
-            value={groupName}
-            onSlInput={(e)=>setGroupName((e.target as HTMLInputElement).value)}
-            style={{ width: '100%', marginBottom: '1rem' }}
-            autoFocus
-          />
-          <SlButton
-            variant="success" 
-            style={{ width: '100%', marginBottom: '1rem' }} 
-            onClick={()=>handleCreateGroup(groupName)}
-            {...(groupName.trim() === '' ? { disabled: true } : { disabled: false })}
-          >
-            Create
-          </SlButton>
+    <main className="tg-page">
+      <TopBar title="Create / Join" onBack={() => navigate('/')} />
+      <div className="tg-page-content is-padded-top">
+        <h2 className="tg-section-title">Create a new group</h2>
+        <GroupedList className="tg-simple-form-card">
+          <p>Start a group and invite friends.</p>
+          <div className="tg-action-field">
+            <input className="tg-text-input" value={groupName} onChange={event => setGroupName(event.target.value)} placeholder="Group name" aria-label="Group name" autoFocus />
+            <PrimaryButton onClick={handleCreateGroup} disabled={!groupName.trim()}>Create</PrimaryButton>
+          </div>
+        </GroupedList>
 
-          <SlDivider style={{ width: '40%', float: 'left', marginTop: '2rem', borderWidth: '2px' }} />
-          <h4 style={{ width: '20%', float: 'left', textAlign: 'center' }}>or</h4>
-          <SlDivider style={{ width: '40%', float: 'right', marginTop: '2rem', borderWidth: '2px' }} />
-
-          <h2 style={{ clear: 'both', marginTop: '5rem' }}>Join to existed group</h2>
-          <SlInput
-            placeholder="Group token"
-            value={groupToken}
-            onSlInput={(e)=>setGroupToken((e.target as HTMLInputElement).value)}
-            style={{ width: '100%', marginBottom: '1rem' }}
-          />
-          <SlButton 
-            variant="success" 
-            style={{ width: '100%', marginBottom: '1rem' }} 
-            onClick={()=>handleJoinToGroup(groupToken)}
-            {...(groupToken.trim() === '' || groupList.containsToken(groupToken) ? { disabled: true } : { disabled: false })}
-          >
-            Join
-          </SlButton>
-        </div>
+        <h2 className="tg-section-title">Join an existing group</h2>
+        <GroupedList className="tg-simple-form-card">
+          <p>Paste an invite link or group token.</p>
+          <div className="tg-action-field">
+            <input className="tg-text-input" value={groupToken} onChange={event => setGroupToken(event.target.value)} placeholder="Link or token" aria-label="Invite link or token" />
+            <PrimaryButton onClick={handleJoinGroup} disabled={!groupToken.trim() || tokenAlreadyUsed}>Join</PrimaryButton>
+          </div>
+          {tokenAlreadyUsed && <span className="tg-field-error">You already belong to this group.</span>}
+        </GroupedList>
       </div>
-    </>
+    </main>
   );
 }

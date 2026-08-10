@@ -4,7 +4,8 @@ export const getRequestOptions = (body: Object) : RequestInit => {
     return {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: body.toString()
+        body: body.toString(),
+        keepalive: true
     };
 }
 

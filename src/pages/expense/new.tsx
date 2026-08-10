@@ -1,154 +1,113 @@
-import { useState, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useContext, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import SlInput from '@shoelace-style/shoelace/dist/react/input';
-import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
-import SlOption from '@shoelace-style/shoelace/dist/react/option';
-import SlSelect from '@shoelace-style/shoelace/dist/react/select';
-import SlTab from '@shoelace-style/shoelace/dist/react/tab';
-import SlTabGroup from '@shoelace-style/shoelace/dist/react/tab-group';
-
-import { AccountContext, ExpenseListContext } from '../../app/App';
-import { MemberListContext } from '../../app/App';
-
+import { AccountContext, ExpenseListContext, ExpenseUpdateFlagContext, MemberListContext, MemberUpdateFlagContext } from '../../app/App';
 import { CURRENCIES } from '../../entities/data/currencies';
-import EquallyExpenseTab from '../../widgets/tabs/equally_expense.tsx';
-import CustomExpenseTab from '../../widgets/tabs/custom_expense.tsx';
-
+import { getCommand } from '../../entities/upload/common';
+import { TUserList } from '../../entities/types/user/user_list';
+import { TUser } from '../../entities/types/user/user';
+import { TExpenseList } from '../../entities/types/expense/expense_list';
+import { TExpense } from '../../entities/types/expense/expense';
+import EquallyExpenseTab from '../../widgets/tabs/equally_expense';
+import CustomExpenseTab from '../../widgets/tabs/custom_expense';
+import { Avatar, TopBar, personName } from '../../widgets/telegram-ui';
 
 export default function NewExpense() {
-
   const { groupId } = useParams() as { groupId: string };
   const navigate = useNavigate();
-
+  const { account } = useContext(AccountContext);
+  const { memberList, setMemberList } = useContext(MemberListContext);
+  const { memberUpdateFlag, setMemberUpdateFlag } = useContext(MemberUpdateFlagContext);
+  const { expenseList, setExpenseList } = useContext(ExpenseListContext);
+  const { expenseUpdateFlag, setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
   const [expenseName, setExpenseName] = useState('');
-  const [expenseAmount, setExpenseAmount] = useState(0);
+  const [expenseAmount, setExpenseAmount] = useState('');
+  const [mode, setMode] = useState<'equal' | 'custom'>('equal');
 
-  const { account } = useContext(AccountContext)
-  const { memberList } = useContext(MemberListContext);
+  const currencyEntries = useMemo(() => {
+    const used = expenseList.getItems().map(expense => expense.getCurrencySymbol());
+    return Object.entries(CURRENCIES).sort((a, b) => {
+      const aIndex = used.indexOf(a[1]);
+      const bIndex = used.indexOf(b[1]);
+      if (aIndex === -1 && bIndex === -1) return a[1].localeCompare(b[1]);
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
+    });
+  }, [expenseList]);
 
-  const { expenseList } = useContext(ExpenseListContext);
-  const usedCurrencies = expenseList.getItems().map(expense => expense.getCurrencySymbol());
+  const [expenseCurrency, setExpenseCurrency] = useState('2');
+  const members = [...memberList.getItems()].sort((a, b) => {
+    if (a.getId() === account.getId()) return -1;
+    if (b.getId() === account.getId()) return 1;
+    return personName(a.getFirstName(), a.getLastName()).localeCompare(personName(b.getFirstName(), b.getLastName()));
+  });
+  const [payerId, setPayerId] = useState(() => String(members[0]?.getId() || ''));
+  useEffect(() => {
+    if (!payerId && members[0]) setPayerId(String(members[0].getId()));
+  }, [members, payerId]);
 
-  const currencyOptions = Object.entries(CURRENCIES)
-    .sort((a, b) => {
-      if (usedCurrencies.indexOf(a[1]) === -1 && usedCurrencies.indexOf(b[1]) === -1) {
-        return a[1].localeCompare(b[1]);
-      }
-      if (usedCurrencies.indexOf(a[1]) === -1) {
-        return 1;
-      }
-      if (usedCurrencies.indexOf(b[1]) === -1) {
-        return -1;
-      }
-      return usedCurrencies.indexOf(a[1]) - usedCurrencies.indexOf(b[1])
-    })
-    .map(
-      ([key, value]) => 
-        <SlOption
-          value={key}
-          {...(value === usedCurrencies[0] ? { selected: true } : { selected: false })}
-        >
-          {value}
-        </SlOption>
-    );
+  useEffect(() => {
+    if (memberList.getItemById(account.getId())) setPayerId(String(account.getId()));
+  }, [account, memberList]);
 
-  const [expenseCurrency, setExpenseCurrency] = useState(currencyOptions[0].props.value as string);
+  useEffect(() => {
+    if (memberUpdateFlag !== Number(groupId)) {
+      fetch(getCommand(`groups/get_member_list&group_id=${groupId}`)).then(response => response.json()).then(data => {
+        const loadedMembers = new TUserList();
+        data.group_members.forEach((item: any) => loadedMembers.addItem(new TUser(item[0], item[1], item[2], item[3], item[4], item[5])));
+        setMemberList(loadedMembers);
+        setMemberUpdateFlag(Number(groupId));
+      });
+    }
 
-  const memberOptions = memberList.getItems()
-    .sort((a, b) => {
-      if (a.getId() !== account.getId() && b.getId() !== account.getId()) {
-        return (a.getFirstName() + a.getLastName()).localeCompare(b.getFirstName() + b.getLastName());
-      }
-      if (a.getId() !== account.getId()) {
-        return 1;
-      }
-      if (b.getId() !== account.getId()) {
-        return -1;
-      }
-      return 0;
-    })
-    .map(
-      (member) => (
-        <SlOption value={member.getId().toString()}>
-          {member.getFirstName()} {member.getLastName()}
-        </SlOption>
-      )
-    );
-  
-  const [payerId, setPayerId] = useState(memberOptions[0].props.value as string);
+    if (expenseUpdateFlag !== Number(groupId)) {
+      fetch(getCommand(`groups/get_expense_list&group_id=${groupId}`)).then(response => response.json()).then(data => {
+        const loadedExpenses = new TExpenseList();
+        data.group_expenses.forEach((item: any) => loadedExpenses.addItem(new TExpense(item[0], item[1], item[2], item[3], item[4], item[5], item[6])));
+        setExpenseList(loadedExpenses);
+        setExpenseUpdateFlag(Number(groupId));
+      });
+    }
+  }, [expenseUpdateFlag, groupId, memberUpdateFlag, setExpenseList, setExpenseUpdateFlag, setMemberList, setMemberUpdateFlag]);
+
+  useEffect(() => {
+    const mostRecentCurrency = expenseList.getItems()[0]?.getCurrencySymbol();
+    const entry = Object.entries(CURRENCIES).find(([, symbol]) => symbol === mostRecentCurrency);
+    if (entry) setExpenseCurrency(entry[0]);
+  }, [expenseList]);
+  const payer = memberList.getItemById(Number(payerId)) || members[0];
+  const amount = Number(expenseAmount);
+  const commonProps = { groupId, groupMembers: memberList, expenseName: expenseName.trim(), expenseAmount: amount, expenseCurrency, payerId };
 
   return (
-    <>
-      <div style={{ background: 'linear-gradient(rgba(0, 255, 127, 0.4), rgba(0, 0, 255, 0.4))', width: '100%', boxSizing: 'border-box' }}>
-        <div style={{ padding: '1rem' }}>
-      <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/groups/' + groupId)} />
-      <h2>Add expense</h2>
-      <SlInput
-        placeholder="Expense name"
-        value={expenseName}
-        onSlInput={(e)=>setExpenseName((e.target as HTMLInputElement).value)}
-        style={{ width: '100%', marginBottom: '1rem' }}
-        autoFocus
-      />
-      <SlInput
-        placeholder="Amount"
-        type="number"
-        min="0"
-        value={expenseAmount.toString()}
-        onSlInput={(e)=>setExpenseAmount(Number((e.target as HTMLInputElement).value))}
-        style={{ width: '60%', marginBottom: '1rem', display: 'inline-block' }}
-      />
-      <SlSelect
-        value={expenseCurrency}
-        style={{ width: '40%', marginBottom: '1rem', display: 'inline-block' }}
-        onSlChange={(e)=>setExpenseCurrency((e.target as HTMLSelectElement).value)}
-      >
-        {currencyOptions}
-      </SlSelect>
-      <SlSelect
-        value={payerId}
-        style={{ width: '100%', marginBottom: '1rem' }}
-        onSlChange={(e)=>setPayerId((e.target as HTMLSelectElement).value)}
-      >
-        {memberOptions}
-      </SlSelect>
+    <main className="tg-page">
+      <TopBar title="Add expense" onBack={() => navigate(`/groups/${groupId}`)} />
+      <div className="tg-form">
+        <div className="tg-amount-line">
+          <input className="tg-amount-input" type="number" inputMode="decimal" min="0" step="0.01" value={expenseAmount} onChange={event => setExpenseAmount(event.target.value)} placeholder="0.00" aria-label="Expense amount" autoFocus />
+          <select className="tg-currency-select" value={expenseCurrency} onChange={event => setExpenseCurrency(event.target.value)} aria-label="Currency">
+            {currencyEntries.map(([key, value]) => <option key={key} value={key}>{value}</option>)}
+          </select>
         </div>
+        <input className="tg-text-input" value={expenseName} onChange={event => setExpenseName(event.target.value)} placeholder="Expense name" aria-label="Expense name" />
+
+        <div className="tg-list-row no-inset" style={{ marginTop: 7, paddingLeft: 1, paddingRight: 1 }}>
+          <span className="tg-row-copy" style={{ flex: '0 0 auto' }}><span className="tg-row-title">Paid by</span></span>
+          {payer && <Avatar name={personName(payer.getFirstName(), payer.getLastName())} size="sm" />}
+          <select className="tg-currency-select" style={{ flex: 1 }} value={payerId || String(members[0]?.getId() || '')} onChange={event => setPayerId(event.target.value)} aria-label="Paid by">
+            {members.map(member => <option key={member.getId()} value={member.getId()}>{personName(member.getFirstName(), member.getLastName())}</option>)}
+          </select>
+        </div>
+
+        <label className="tg-field-label">Split between</label>
+        <div className="tg-segmented" role="tablist" aria-label="Split method">
+          <button type="button" role="tab" aria-selected={mode === 'equal'} className={`tg-segment ${mode === 'equal' ? 'is-active' : ''}`} onClick={() => setMode('equal')}>Equal</button>
+          <button type="button" role="tab" aria-selected={mode === 'custom'} className={`tg-segment ${mode === 'custom' ? 'is-active' : ''}`} onClick={() => setMode('custom')}>Custom</button>
+        </div>
+
+        {mode === 'equal' ? <EquallyExpenseTab {...commonProps} /> : <CustomExpenseTab {...commonProps} />}
       </div>
-
-      <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
-      <SlTabGroup
-        {...(expenseName === '' || expenseAmount === 0 ? 
-          { style:{ display: 'none' } } : 
-          { style:{ display: 'block' } })
-        }
-      >
-        <SlTab slot="nav" panel="equally">
-          Equally
-        </SlTab>
-        <SlTab slot="nav" panel="custom">
-          Custom
-        </SlTab>
-
-        <EquallyExpenseTab 
-          groupId={groupId}
-          groupMembers={memberList} 
-          expenseName={expenseName} 
-          expenseAmount={expenseAmount} 
-          expenseCurrency={expenseCurrency} 
-          payerId={payerId}
-        />
-
-        <CustomExpenseTab 
-          groupId={groupId}
-          groupMembers={memberList} 
-          expenseName={expenseName}
-          expenseAmount={expenseAmount}
-          expenseCurrency={expenseCurrency}
-          payerId={payerId}
-        />
-      </SlTabGroup>
-      </div>
-    </>
+    </main>
   );
 }

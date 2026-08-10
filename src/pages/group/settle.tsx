@@ -1,304 +1,199 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import SlIconButton from '@shoelace-style/shoelace/dist/react/icon-button';
-import SlCard from '@shoelace-style/shoelace/dist/react/card';
-import SlSkeleton from '@shoelace-style/shoelace/dist/react/skeleton';
-import SlDialog from '@shoelace-style/shoelace/dist/react/dialog';
-import SlButton from '@shoelace-style/shoelace/dist/react/button';
-import SlSelect from '@shoelace-style/shoelace/dist/react/select';
-import SlOption from '@shoelace-style/shoelace/dist/react/option';
-
+import { BalanceListContext, BalanceUpdateFlagContext, ExpenseUpdateFlagContext, GroupListContext } from '../../app/App';
 import { getCommand } from '../../entities/upload/common';
-
-import { GroupListContext } from '../../app/App';
-import { BalanceListContext, BalanceUpdateFlagContext, ExpenseUpdateFlagContext } from '../../app/App';
-import { TGroup } from '../../entities/types/group/group';
+import { createDirectExpense, optimizePayments } from '../../entities/upload/expenses';
+import { getRates } from '../../entities/upload/rates';
 import { TBalanceList } from '../../entities/types/balance/balance_list';
+import { TBalance } from '../../entities/types/balance/balance';
+import { CURRENCIES } from '../../entities/data/currencies';
+import { formatAmount } from '../../entities/utils/common';
+import { haptic } from '../../entities/utils/telegram';
+import { Avatar, EmptyState, GroupedList, Icon, ListRow, Modal, PrimaryButton, SkeletonRows, toneForAmount, TopBar } from '../../widgets/telegram-ui';
 
-import { GRADIENTS } from '../../entities/data/gradients.ts';
-import { CURRENCIES } from '../../entities/data/currencies.ts';
-import { formatAmount } from '../../entities/utils/common.ts';
-import { TBalance } from '../../entities/types/balance/balance.ts';
-import { createDirectExpense, optimizePayments } from '../../entities/upload/expenses.ts';
-import { getRates } from '../../entities/upload/rates.ts';
-import PremiumButton from '../../widgets/premium_button.tsx';
-
+type ConvertedBalance = { userId: number; name: string; amount: number; sourceBalances: TBalance[] };
 
 export default function GroupSettle() {
-
   const { groupId } = useParams();
-  const { groupList } = useContext(GroupListContext);
-  const group: TGroup = groupList.getItemById(Number(groupId)) as TGroup;
-
   const navigate = useNavigate();
-
+  const { groupList } = useContext(GroupListContext);
+  const group = groupList.getItemById(Number(groupId));
   const { balanceList, setBalanceList } = useContext(BalanceListContext);
   const { balanceUpdateFlag, setBalanceUpdateFlag } = useContext(BalanceUpdateFlagContext);
   const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
-
   const [convertMode, setConvertMode] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState('');
   const [targetCurrency, setTargetCurrency] = useState<{ id: number; code: string } | null>(null);
-  const [convertedBalances, setConvertedBalances] = useState<Array<{
-    userId: number;
-    name: string;
-    amount: number;
-    sourceBalances: TBalance[];
-  }>>([]);
-  const [selectedCurrencyForConvert, setSelectedCurrencyForConvert] = useState('');
-
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [convertedBalances, setConvertedBalances] = useState<ConvertedBalance[]>([]);
   const [selectedBalance, setSelectedBalance] = useState<TBalance | null>(null);
-  const [selectedConvertedBalance, setSelectedConvertedBalance] = useState<{
-    userId: number;
-    name: string;
-    amount: number;
-    sourceBalances: TBalance[];
-  } | null>(null);
+  const [selectedConverted, setSelectedConverted] = useState<ConvertedBalance | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const [paymentError, setPaymentError] = useState('');
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
+    if (!group || balanceUpdateFlag === group.getId()) return;
     const fetchData = async () => {
+      setLoadError('');
+      try {
+        const response = await fetch(getCommand(`groups/get_balance_list&group_id=${groupId}`));
+        if (!response.ok) throw new Error(`Balance request failed with status ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data.group_balances)) throw new Error('Balance response has an invalid shape');
+        const balances = new TBalanceList();
+        data.group_balances.forEach((item: any) => balances.addItem(new TBalance(item[0], item[1], item[2], item[3], item[4])));
+        setBalanceList(balances);
+        setActionError('');
+      } catch (_) {
+        setLoadError('Could not refresh payments. Please reopen this screen.');
+      } finally {
+        setBalanceUpdateFlag(group.getId());
+      }
+    };
+    fetchData();
+  }, [balanceUpdateFlag, group, groupId, setBalanceList, setBalanceUpdateFlag]);
 
-      const response = await fetch(getCommand("groups/get_balance_list&group_id=" + groupId))
+  if (!group) return <main className="tg-page"><TopBar title="Settle up" onBack={() => navigate(`/groups/${groupId}`)} /></main>;
 
-      const data = await response.json()
-      console.log('Input balance list:', data)
-      balanceList.clear();
-      data.group_balances.forEach((item: any) => {
-        const balance = new TBalance(
-          item[0],
-          item[1],
-          item[2],
-          item[3],
-          item[4]
-        );
-        balanceList.addItem(balance);
-      })
-      setBalanceList(new TBalanceList(balanceList.getItems()));
-      setBalanceUpdateFlag(group.getId());
+  const handleConvert = async (currencyId: string) => {
+    setSelectedCurrency(currencyId);
+    if (!currencyId) {
+      setConvertMode(false);
+      setTargetCurrency(null);
+      setConvertedBalances([]);
+      return;
     }
 
-    if (balanceUpdateFlag !== group.getId()) fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [balanceUpdateFlag]);
-
-  const handleOpenDialog = (balance: TBalance) => {
-    setSelectedBalance(balance);
-    setDialogOpen(true)
-  }
-
-  const handleCreatePayment = () => {
-    createDirectExpense(
-      groupId || '',
-      selectedBalance?.getAmount() || 0,
-      selectedBalance?.getCurrency() || 0,
-      selectedBalance?.getUserId() || 0,
-      selectedBalance?.getFirstAndLastName() || ''
-    );
-    setExpenseUpdateFlag(-1);
-    setBalanceUpdateFlag(-1);
-    setDialogOpen(false);
-  }
-
-  const handleOptimizePayments = () => {
-    optimizePayments(groupId || '');
-    setExpenseUpdateFlag(-1);
-    setBalanceUpdateFlag(-1);
-  }
-
-  const handleConvert = async () => {
-    if (!selectedCurrencyForConvert) return;
-
-    const targetId = Number(selectedCurrencyForConvert);
-    const targetCode = CURRENCIES[selectedCurrencyForConvert];
-
+    const targetId = Number(currencyId);
+    const targetCode = CURRENCIES[currencyId];
     const response = await getRates(targetId);
     const data = await response.json();
     const rates: Record<number, number> = data.rates;
-    console.log('Rates:', rates);
+    const users = new Map<number, ConvertedBalance>();
 
-    const userMap = new Map<number, { name: string; amount: number; sourceBalances: TBalance[] }>();
-
-    balanceList.getItems().forEach((balance) => {
+    balanceList.getItems().forEach(balance => {
       const rate = rates[balance.getCurrency()];
       if (rate === undefined) return;
-
-      const convertedAmount = Math.round(balance.getAmount() / rate);
-      if (convertedAmount === 0) return;
-
-      const userId = balance.getUserId();
-      const existing = userMap.get(userId);
-      if (existing) {
-        existing.amount += convertedAmount;
-        existing.sourceBalances.push(balance);
-      } else {
-        userMap.set(userId, {
-          name: balance.getFirstAndLastName(),
-          amount: convertedAmount,
-          sourceBalances: [balance],
-        });
-      }
+      const amount = Math.round(balance.getAmount() / rate);
+      if (!amount) return;
+      const current = users.get(balance.getUserId());
+      if (current) {
+        current.amount += amount;
+        current.sourceBalances.push(balance);
+      } else users.set(balance.getUserId(), { userId: balance.getUserId(), name: balance.getFirstAndLastName(), amount, sourceBalances: [balance] });
     });
 
-    const result = Array.from(userMap.entries())
-      .filter(([_, v]) => v.amount !== 0)
-      .map(([userId, v]) => ({ userId, ...v }));
-
-    setConvertedBalances(result);
+    setConvertedBalances(Array.from(users.values()).filter(item => item.amount !== 0));
     setTargetCurrency({ id: targetId, code: targetCode });
     setConvertMode(true);
-  }
+    haptic('selection');
+  };
 
-  const handleResetConvert = () => {
-    setConvertMode(false);
-    setTargetCurrency(null);
-    setConvertedBalances([]);
-  }
-
-  const handleOpenConvertedDialog = (item: typeof convertedBalances[0]) => {
-    setSelectedConvertedBalance(item);
+  const openPayment = (balance: TBalance) => {
+    setSelectedBalance(balance);
+    setSelectedConverted(null);
     setDialogOpen(true);
-  }
+    setPaymentError('');
+    haptic('selection');
+  };
 
-  const handleCreateConvertedPayment = () => {
-    if (!selectedConvertedBalance) return;
+  const openConvertedPayment = (balance: ConvertedBalance) => {
+    setSelectedConverted(balance);
+    setSelectedBalance(null);
+    setDialogOpen(true);
+    setPaymentError('');
+    haptic('selection');
+  };
 
-    selectedConvertedBalance.sourceBalances.forEach((balance) => {
-      createDirectExpense(
-        groupId || '',
-        balance.getAmount(),
-        balance.getCurrency(),
-        balance.getUserId(),
-        balance.getFirstAndLastName()
-      );
-    });
+  const recordPayment = async () => {
+    if (!selectedConverted && !selectedBalance) return;
+    setRecording(true);
+    setPaymentError('');
+    try {
+      const responses = selectedConverted
+        ? await Promise.all(selectedConverted.sourceBalances.map(balance => createDirectExpense(groupId || '', balance.getAmount(), balance.getCurrency(), balance.getUserId(), balance.getFirstAndLastName())))
+        : [await createDirectExpense(groupId || '', selectedBalance!.getAmount(), selectedBalance!.getCurrency(), selectedBalance!.getUserId(), selectedBalance!.getFirstAndLastName())];
+      if (responses.some(response => !response.ok)) throw new Error('Payment request failed');
+      setExpenseUpdateFlag(-1);
+      setBalanceUpdateFlag(-1);
+      setDialogOpen(false);
+      setSelectedBalance(null);
+      setSelectedConverted(null);
+      haptic('success');
+    } catch (_) {
+      setPaymentError('Could not confirm this payment. Please try again.');
+      haptic('error');
+    } finally {
+      setRecording(false);
+    }
+  };
 
-    setExpenseUpdateFlag(-1);
-    setBalanceUpdateFlag(-1);
-    setDialogOpen(false);
-    setConvertMode(false);
-    setTargetCurrency(null);
-    setConvertedBalances([]);
-    setSelectedConvertedBalance(null);
-  }
+  const optimize = async () => {
+    if (optimizing) return;
+    setOptimizing(true);
+    setActionError('');
+    try {
+      const response = await optimizePayments(groupId || '');
+      if (!response.ok) setActionError('Could not verify the result. Refreshing payments…');
+      else haptic('success');
+    } catch (_) {
+      setActionError('Could not verify the result. Refreshing payments…');
+    } finally {
+      setExpenseUpdateFlag(-1);
+      setBalanceUpdateFlag(-1);
+      setOptimizing(false);
+    }
+  };
 
-  const originalBalances = balanceList.getItems().map(
-    (balance) =>
-      <SlCard key={`${balance.getUserId()}-${balance.getCurrency()}`} style={{ width: '100%', marginBottom: '1rem' }} onClick={() => handleOpenDialog(balance)}>
-        <b>{balance.getFirstAndLastName()}</b>
-        <span
-          {...(balance.getAmount() < 0 ? { style: {color: 'red', float: 'right' } } : { style: {color: 'green', float: 'right' } })}
-        >
-          {balance.getAmountFormatted()}
-        </span>
-      </SlCard>
-  );
-
-
-
-  const convertedCards = convertedBalances.map((item) => (
-    <SlCard key={`conv-${item.userId}`} style={{ width: '100%', marginBottom: '1rem' }} onClick={() => handleOpenConvertedDialog(item)}>
-      <b>{item.name}</b>
-      <span
-        {...(item.amount < 0 ? { style: {color: 'red', float: 'right' } } : { style: {color: 'green', float: 'right' } })}
-      >
-        {formatAmount(item.amount, targetCurrency?.code || '')}
-      </span>
-    </SlCard>
-  ));
-
-  const dialogLabel = convertMode ? `Converted to ${targetCurrency?.code || ''}` : 'Record a payment';
+  const loading = balanceUpdateFlag !== group.getId();
+  const items = convertMode ? convertedBalances : balanceList.getItems();
+  const selectedAmount = selectedConverted?.amount ?? selectedBalance?.getAmount() ?? 0;
+  const selectedName = selectedConverted?.name ?? selectedBalance?.getFirstAndLastName() ?? '';
+  const selectedSymbol = selectedConverted ? targetCurrency?.code || '' : selectedBalance?.getCurrencySymbol() || '';
 
   return (
-    <>
+    <main className="tg-page">
+      <TopBar title="Settle up" onBack={() => navigate(`/groups/${groupId}`)} />
+      <div className="tg-page-content is-padded-top">
+        <h2 className="tg-section-title" style={{ marginTop: 2 }}>Suggested payments in {group.getName()}</h2>
+        {loading ? <SkeletonRows count={3} /> : items.length ? (
+          <GroupedList>
+            {convertMode ? convertedBalances.map(item => (
+              <ListRow key={item.userId} avatar={<Avatar name={item.name} size="sm" />} title={item.amount < 0 ? `Pay ${item.name}` : `${item.name} pays you`} subtitle="Tap to mark as paid" value={formatAmount(Math.abs(item.amount), targetCurrency?.code || '')} valueTone={toneForAmount(item.amount)} onClick={() => openConvertedPayment(item)} chevron />
+            )) : balanceList.getItems().map(balance => (
+              <ListRow key={`${balance.getUserId()}-${balance.getCurrency()}`} avatar={<Avatar name={balance.getFirstAndLastName()} size="sm" />} title={balance.getAmount() < 0 ? `Pay ${balance.getFirstAndLastName()}` : `${balance.getFirstAndLastName()} pays you`} subtitle="Tap to mark as paid" value={formatAmount(Math.abs(balance.getAmount()), balance.getCurrencySymbol())} valueTone={toneForAmount(balance.getAmount())} onClick={() => openPayment(balance)} chevron />
+            ))}
+          </GroupedList>
+        ) : <EmptyState icon="check" title="All settled up" message="Nobody owes anything in this group." />}
+        {loadError && <p className="tg-action-error">{loadError}</p>}
 
-      <div style={{ background: GRADIENTS[group.getId() % 15], width: '100%', height: '10rem', boxSizing: 'border-box' }}>
-        <div style={{ padding: '1rem' }}>
-          <div>
-            <SlIconButton name="arrow-left-circle-fill" label="Back" style={{ fontSize: '1.5rem' }} onClick={()=>navigate('/groups/' + groupId)} />
+        <h2 className="tg-section-title">Display</h2>
+        <GroupedList>
+          <div className="tg-list-row no-inset">
+            <span className="tg-row-copy"><span className="tg-row-title">Currency</span><span className="tg-row-subtitle">Convert suggested payments for display</span></span>
+            <select className="tg-currency-select" value={selectedCurrency} onChange={event => handleConvert(event.target.value)} aria-label="Target currency">
+              <option value="">Original</option>
+              {Object.entries(CURRENCIES).map(([key, value]) => <option key={key} value={key}>{value}</option>)}
+            </select>
           </div>
-          <div style={{ float: 'left' }}>
-            <h2 style={{ marginBottom: '0px' }}>{group.getName()}</h2>
-          </div>
-        </div>
+          {!convertMode && <ListRow title={optimizing ? 'Optimizing payments…' : 'Optimize suggested payments'} subtitle="Minimize the number of transfers" value={optimizing ? 'Please wait' : <Icon name="sparkles" size={18} />} valueTone="accent" onClick={optimizing ? undefined : optimize} chevron={!optimizing} className="no-inset" />}
+        </GroupedList>
+        {!convertMode && actionError && <p className="tg-action-error">{actionError}</p>}
       </div>
 
-      <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem' }}>
-        <h3 style={{ marginBottom: '1rem' }}>Your balances:</h3>
-        { balanceUpdateFlag !== group.getId() ?
-            <>
-              <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%', marginBottom: '1rem' }} />
-              <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%', marginBottom: '1rem' }} />
-              <SlSkeleton effect="sheen" style={{ height: '4rem', borderRadius: '0.2rem', width: '100%' }} />
-            </>
-          :
-          convertMode && convertedBalances.length > 0 ?
-          <>
-            <small>Showing balances converted to <b>{targetCurrency?.code}</b></small>
-            <div style={{ height: '0.5rem' }} />
-            {convertedCards}
-            <SlButton variant="primary" style={{ width: '100%' }} onClick={handleResetConvert}>Reset</SlButton>
-          </>
-          :
-          convertMode && convertedBalances.length === 0 ?
-          <>
-            <p>All settled up!</p>
-            <SlButton variant="primary" style={{ width: '100%' }} onClick={handleResetConvert}>Reset</SlButton>
-          </>
-          :
-          originalBalances.length > 0 ?
-            <>
-              {originalBalances}
-              <div style={{ marginBottom: '0.5rem' }}>
-                <PremiumButton onCLick={handleOptimizePayments} isLimitExceeded={true} title='Optimize' />
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <div style={{ width: '200px', flexShrink: 0 }}>
-                  <PremiumButton onCLick={handleConvert} isLimitExceeded={true} title='Convert to' />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <SlSelect
-                    value={selectedCurrencyForConvert}
-                    placeholder="Currency"
-                    onSlChange={(e) => setSelectedCurrencyForConvert((e.target as HTMLSelectElement).value)}
-                  >
-                    {Object.entries(CURRENCIES).map(([key, value]) => (
-                      <SlOption key={key} value={key}>{value}</SlOption>
-                    ))}
-                  </SlSelect>
-                </div>
-              </div>
-            </>
-            :
-            <p>All settled up!</p>
-        }
-      </div>
-
-      <SlDialog label={dialogLabel} open={dialogOpen} onSlAfterHide={() => {
-        setDialogOpen(false);
-        setSelectedConvertedBalance(null);
-      }}>
-        { convertMode && selectedConvertedBalance ? (
-          selectedConvertedBalance.amount < 0 ?
-            <>You paid <b>{selectedConvertedBalance.name}</b> {formatAmount(-selectedConvertedBalance.amount, targetCurrency?.code || '')}?</>
-          :
-            <><b>{selectedConvertedBalance.name}</b> paid you {formatAmount(selectedConvertedBalance.amount, targetCurrency?.code || '')}?</>
-        ) : !convertMode && selectedBalance ? (
-          selectedBalance.getAmount() < 0 ?
-            <>You paid <b>{selectedBalance.getFirstAndLastName()}</b> {formatAmount(-selectedBalance.getAmount(), selectedBalance.getCurrencySymbol())}?</>
-          :
-            <><b>{selectedBalance.getFirstAndLastName()}</b> paid you {selectedBalance?.getAmountFormatted()}?</>
-        ) : null }
-        <SlButton slot="footer" variant="neutral" onClick={() => {
-          setDialogOpen(false);
-          setSelectedConvertedBalance(null);
-        }}>
-          Cancel
-        </SlButton>
-        <SlButton slot="footer" variant="success" onClick={convertMode ? handleCreateConvertedPayment : handleCreatePayment}>
-          Save
-        </SlButton>
-      </SlDialog>
-    </>
+      <Modal
+        open={dialogOpen}
+        title="Mark payment as completed?"
+        onClose={() => !recording && setDialogOpen(false)}
+        footer={<><PrimaryButton outline disabled={recording} onClick={() => setDialogOpen(false)}>Cancel</PrimaryButton><PrimaryButton disabled={recording} onClick={recordPayment}>{recording ? 'Saving…' : 'Mark as paid'}</PrimaryButton></>}
+      >
+        {selectedName && <p>{selectedAmount < 0 ? <>Confirm that you paid <strong>{selectedName}</strong> {formatAmount(Math.abs(selectedAmount), selectedSymbol)}.</> : <>Confirm that <strong>{selectedName}</strong> paid you {formatAmount(selectedAmount, selectedSymbol)}.</>}</p>}
+        {paymentError && <p className="tg-action-error">{paymentError}</p>}
+      </Modal>
+    </main>
   );
 }

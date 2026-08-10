@@ -32,7 +32,7 @@ export const createCustomExpense = (groupId: string, expenseName: string, expens
 }
 
 export const createDirectExpense = (groupId: string, amount: number, currency: number, user_id: number, first_and_last_name: string) => {
-    fetch(getCommand("expenses/create_direct"), getRequestOptions(
+    return fetch(getCommand("expenses/create_direct"), getRequestOptions(
         JSON.stringify(
             {
                 group_id: groupId,
@@ -46,11 +46,11 @@ export const createDirectExpense = (groupId: string, amount: number, currency: n
 }
 
 export const deleteExpense = (expenseId: number) => {
-    fetch(getCommand("expenses/delete"), getRequestOptions(expenseId));
+    return fetch(getCommand("expenses/delete"), getRequestOptions(expenseId));
 }
 
 export const optimizePayments = (groupId: string) => {
-    fetch(getCommand("expenses/optimize"), getRequestOptions(
+    return fetch(getCommand("expenses/optimize"), getRequestOptions(
         JSON.stringify(
             {
                 group_id: groupId
