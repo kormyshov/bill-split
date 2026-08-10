@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { BalanceListContext, BalanceUpdateFlagContext, ExpenseUpdateFlagContext, GroupListContext } from '../../app/App';
+import { AccountContext, AccountUpdateFlagContext, BalanceListContext, BalanceUpdateFlagContext, ExpenseUpdateFlagContext, GroupListContext } from '../../app/App';
 import { getCommand } from '../../entities/upload/common';
 import { createDirectExpense, optimizePayments } from '../../entities/upload/expenses';
 import { getRates } from '../../entities/upload/rates';
@@ -19,6 +19,8 @@ export default function GroupSettle() {
   const navigate = useNavigate();
   const { groupList } = useContext(GroupListContext);
   const group = groupList.getItemById(Number(groupId));
+  const { account } = useContext(AccountContext);
+  const { accountUpdateFlag } = useContext(AccountUpdateFlagContext);
   const { balanceList, setBalanceList } = useContext(BalanceListContext);
   const { balanceUpdateFlag, setBalanceUpdateFlag } = useContext(BalanceUpdateFlagContext);
   const { setExpenseUpdateFlag } = useContext(ExpenseUpdateFlagContext);
@@ -34,6 +36,12 @@ export default function GroupSettle() {
   const [actionError, setActionError] = useState('');
   const [paymentError, setPaymentError] = useState('');
   const [loadError, setLoadError] = useState('');
+  const isPremium = !accountUpdateFlag && account.isPremium();
+
+  const openPremium = () => {
+    haptic('selection');
+    navigate('/account/info');
+  };
 
   useEffect(() => {
     if (!group || balanceUpdateFlag === group.getId()) return;
@@ -60,6 +68,11 @@ export default function GroupSettle() {
   if (!group) return <main className="tg-page"><TopBar title="Settle up" onBack={() => navigate(`/groups/${groupId}`)} /></main>;
 
   const handleConvert = async (currencyId: string) => {
+    if (!isPremium) {
+      openPremium();
+      return;
+    }
+
     setSelectedCurrency(currencyId);
     if (!currencyId) {
       setConvertMode(false);
@@ -133,6 +146,10 @@ export default function GroupSettle() {
   };
 
   const optimize = async () => {
+    if (!isPremium) {
+      openPremium();
+      return;
+    }
     if (optimizing) return;
     setOptimizing(true);
     setActionError('');
@@ -173,14 +190,22 @@ export default function GroupSettle() {
 
         <h2 className="tg-section-title">Display</h2>
         <GroupedList>
-          <div className="tg-list-row no-inset">
-            <span className="tg-row-copy"><span className="tg-row-title">Currency</span><span className="tg-row-subtitle">Convert suggested payments for display</span></span>
-            <select className="tg-currency-select" value={selectedCurrency} onChange={event => handleConvert(event.target.value)} aria-label="Target currency">
-              <option value="">Original</option>
-              {Object.entries(CURRENCIES).map(([key, value]) => <option key={key} value={key}>{value}</option>)}
-            </select>
-          </div>
-          {!convertMode && <ListRow title={optimizing ? 'Optimizing payments…' : 'Optimize suggested payments'} subtitle="Minimize the number of transfers" value={optimizing ? 'Please wait' : <Icon name="sparkles" size={18} />} valueTone="accent" onClick={optimizing ? undefined : optimize} chevron={!optimizing} className="no-inset" />}
+          {accountUpdateFlag ? (
+            <ListRow title="Currency" subtitle="Checking Premium access…" value="Please wait" valueTone="muted" className="no-inset" />
+          ) : isPremium ? (
+            <div className="tg-list-row no-inset">
+              <span className="tg-row-copy"><span className="tg-row-title">Currency</span><span className="tg-row-subtitle">Convert suggested payments for display</span></span>
+              <select className="tg-currency-select" value={selectedCurrency} onChange={event => handleConvert(event.target.value)} aria-label="Target currency">
+                <option value="">Original</option>
+                {Object.entries(CURRENCIES).map(([key, value]) => <option key={key} value={key}>{value}</option>)}
+              </select>
+            </div>
+          ) : (
+            <ListRow title="Currency conversion" subtitle="Available with Premium" value={<Icon name="lock" size={16} />} valueTone="muted" onClick={openPremium} chevron className="no-inset" />
+          )}
+          {!accountUpdateFlag && !convertMode && (isPremium
+            ? <ListRow title={optimizing ? 'Optimizing payments…' : 'Optimize suggested payments'} subtitle="Minimize the number of transfers" value={optimizing ? 'Please wait' : <Icon name="sparkles" size={18} />} valueTone="accent" onClick={optimizing ? undefined : optimize} chevron={!optimizing} className="no-inset" />
+            : <ListRow title="Optimize suggested payments" subtitle="Available with Premium" value={<Icon name="lock" size={16} />} valueTone="muted" onClick={openPremium} chevron className="no-inset" />)}
         </GroupedList>
         {!convertMode && actionError && <p className="tg-action-error">{actionError}</p>}
       </div>
