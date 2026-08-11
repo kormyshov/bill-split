@@ -86,6 +86,7 @@ export default function AccountInfo() {
 
         <h2 className="tg-section-title">Premium benefits</h2>
         <GroupedList>
+          <ListRow leading={<span className="tg-benefit-icon"><Icon name="sparkles" size={20} /></span>} title="Scan receipts" className="no-inset" />
           <ListRow leading={<span className="tg-benefit-icon"><Icon name="users" size={20} /></span>} title="Unlimited groups" className="no-inset" />
           <ListRow leading={<span className="tg-benefit-icon"><Icon name="card" size={20} /></span>} title="Unlimited expenses" className="no-inset" />
           <ListRow leading={<span className="tg-benefit-icon"><Icon name="check" size={20} /></span>} title="Optimize payments" className="no-inset" />

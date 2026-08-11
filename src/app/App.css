@@ -217,6 +217,17 @@ button.tg-list-row:active { background: var(--secondary-bg); }
 .tg-text-input:focus, .tg-currency-select:focus, .tg-number-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent); }
 .tg-text-input::placeholder { color: var(--hint); }
 .tg-number-input { width: 86px; height: 34px; padding: 0 8px; border: .5px solid var(--separator); border-radius: 7px; outline: none; background: var(--section-bg); color: var(--text); text-align: right; }
+.tg-file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.tg-receipt-scan { margin-top: 10px; }
+.tg-receipt-scan-button { display: flex; width: 100%; min-height: 58px; padding: 8px 10px; align-items: center; gap: 10px; border: .5px solid var(--separator); border-radius: 10px; background: var(--section-bg); color: var(--text); text-align: left; }
+.tg-receipt-scan-button:active:not(:disabled) { background: var(--secondary-bg); }
+.tg-receipt-scan-button:disabled { opacity: .65; }
+.tg-receipt-scan-icon { display: inline-flex; width: 36px; height: 36px; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 50%; background: color-mix(in srgb, var(--accent) 12%, var(--section-bg)); color: var(--accent); }
+.tg-scan-lock, .tg-scan-chevron { display: inline-flex; color: var(--hint); }
+.tg-scan-spinner { width: 18px; height: 18px; flex: 0 0 auto; border: 2px solid color-mix(in srgb, var(--accent) 22%, transparent); border-top-color: var(--accent); border-radius: 50%; animation: tg-spin .8s linear infinite; }
+.tg-scan-message, .tg-scan-error { margin: 7px 4px 0; font-size: 11px; }
+.tg-scan-message { color: var(--hint); }
+.tg-scan-error { color: var(--destructive); }
 .tg-amount-input::-webkit-outer-spin-button,
 .tg-amount-input::-webkit-inner-spin-button,
 .tg-number-input::-webkit-outer-spin-button,
@@ -232,8 +243,11 @@ button.tg-list-row:active { background: var(--secondary-bg); }
 .tg-checkbox { display: inline-flex; width: 20px; height: 20px; flex: 0 0 auto; align-items: center; justify-content: center; border: 1.5px solid var(--accent); border-radius: 5px; background: var(--accent); color: var(--accent-text); }
 .tg-checkbox.is-unchecked { background: transparent; color: transparent; }
 .tg-custom-split { margin-top: 10px; }
-.tg-receipt-row { position: relative; display: grid; grid-template-columns: 88px minmax(0, 1fr) 34px; gap: 8px; min-height: 54px; padding: 9px 10px; align-items: center; }
+.tg-receipt-row { position: relative; display: grid; grid-template-columns: 88px minmax(0, 1fr) 34px; gap: 8px; min-height: 94px; padding: 9px 10px; align-items: center; }
 .tg-receipt-row + .tg-receipt-row::before { content: ''; position: absolute; top: 0; right: 10px; left: 10px; height: .5px; background: var(--separator); }
+.tg-receipt-name-input { grid-column: 1 / -1; width: 100%; height: 32px; padding: 0 3px; border: 0; border-bottom: .5px solid var(--separator); outline: none; background: transparent; color: var(--text); }
+.tg-receipt-name-input:focus { border-bottom-color: var(--accent); }
+.tg-receipt-name-input::placeholder { color: var(--hint); }
 .tg-member-select { min-width: 0; height: 34px; padding: 0 8px; border: .5px solid var(--separator); border-radius: 7px; background: var(--section-bg); color: var(--text); }
 .tg-add-item-button { display: inline-flex; width: 100%; min-height: 42px; margin-top: 8px; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--accent); border-radius: 9px; background: transparent; color: var(--accent); font-weight: 600; }
 .tg-choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -328,6 +342,7 @@ button.tg-list-row:active { background: var(--secondary-bg); }
 .tg-modal-footer .tg-primary-button { min-height: 44px; }
 
 @keyframes tg-modal-in { from { opacity: 0; transform: translateY(18px); } }
+@keyframes tg-spin { to { transform: rotate(360deg); } }
 
 @keyframes tg-shimmer { to { background-position: -200% 0; } }
 
