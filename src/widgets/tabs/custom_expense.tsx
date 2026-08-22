@@ -10,7 +10,7 @@ import { CURRENCIES } from '../../entities/data/currencies';
 import { haptic } from '../../entities/utils/telegram';
 import { Avatar, GroupedList, Icon, ListRow, PrimaryButton, personName } from '../telegram-ui';
 
-export type ReceiptPosition = { id: string; name: string; amount: number; memberId: number };
+export type ReceiptPosition = { id: string; name: string; nameEn?: string; amount: number; memberId: number };
 
 type CustomExpenseProps = {
   groupId: string;
@@ -30,10 +30,12 @@ export default function CustomExpenseTab(props: CustomExpenseProps) {
   const members: TUser[] = props.groupMembers.getItems();
   const { positions, setPositions } = props;
   const [splitRestOption, setSplitRestOption] = useState<'all' | 'active'>('all');
+  const [showTranslations, setShowTranslations] = useState(false);
 
   const positionTotal = positions.reduce((sum, position) => sum + position.amount, 0);
   const remaining = Number((props.expenseAmount - positionTotal).toFixed(2));
   const validPositions = positions.length > 0 && positions.every(position => position.amount > 0 && position.memberId !== -1) && remaining >= 0;
+  const hasTranslations = positions.some(position => position.nameEn && position.nameEn.localeCompare(position.name, undefined, { sensitivity: 'base' }) !== 0);
   const activeMemberIds = Array.from(new Set(positions.filter(position => position.memberId !== -1).map(position => position.memberId)));
 
   const totals = useMemo(() => members.map(member => {
@@ -60,12 +62,37 @@ export default function CustomExpenseTab(props: CustomExpenseProps) {
 
   return (
     <div className="tg-custom-split">
-      <h2 className="tg-section-title">Items from the receipt</h2>
+      <div className="tg-section-title-row">
+        <h2 className="tg-section-title">Items from the receipt</h2>
+        {hasTranslations && (
+          <button
+            type="button"
+            className={`tg-translation-toggle ${showTranslations ? 'is-active' : ''}`}
+            aria-pressed={showTranslations}
+            aria-label={`${showTranslations ? 'Hide' : 'Show'} English translations`}
+            onClick={() => {
+              setShowTranslations(current => !current);
+              haptic('selection');
+            }}
+          >
+            <span className="tg-translation-toggle-track" aria-hidden="true"><span /></span>
+            English
+          </button>
+        )}
+      </div>
       {positions.length > 0 && (
         <GroupedList>
           {positions.map((position, index) => (
             <div className="tg-receipt-row" key={position.id}>
-              <input className="tg-receipt-name-input" value={position.name} placeholder={`Item ${index + 1}`} onChange={event => updatePosition(index, { name: event.target.value })} aria-label={`Name for item ${index + 1}`} />
+              <div className="tg-receipt-name">
+                <input
+                  className="tg-receipt-name-input"
+                  value={showTranslations && position.nameEn ? position.nameEn : position.name}
+                  placeholder={`Item ${index + 1}`}
+                  onChange={event => updatePosition(index, showTranslations && position.nameEn ? { nameEn: event.target.value } : { name: event.target.value })}
+                  aria-label={`Name for item ${index + 1}`}
+                />
+              </div>
               <input className="tg-number-input" type="number" min="0" step="0.01" value={position.amount || ''} placeholder="0.00" onChange={event => updatePosition(index, { amount: Number(event.target.value) })} aria-label={`Amount for item ${index + 1}`} />
               <select className="tg-member-select" value={position.memberId} onChange={event => updatePosition(index, { memberId: Number(event.target.value) })} aria-label={`Member for item ${index + 1}`}>
                 <option value={-1}>Choose member</option>

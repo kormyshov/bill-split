@@ -243,9 +243,18 @@ button.tg-list-row:active { background: var(--secondary-bg); }
 .tg-checkbox { display: inline-flex; width: 20px; height: 20px; flex: 0 0 auto; align-items: center; justify-content: center; border: 1.5px solid var(--accent); border-radius: 5px; background: var(--accent); color: var(--accent-text); }
 .tg-checkbox.is-unchecked { background: transparent; color: transparent; }
 .tg-custom-split { margin-top: 10px; }
+.tg-section-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.tg-section-title-row .tg-section-title { min-width: 0; flex: 1; }
+.tg-translation-toggle { display: inline-flex; margin: 0 4px 7px 0; padding: 0; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--hint); font-size: 11px; white-space: nowrap; }
+.tg-translation-toggle-track { position: relative; width: 30px; height: 18px; flex: 0 0 auto; border-radius: 9px; background: var(--separator); transition: background-color .15s ease; }
+.tg-translation-toggle-track > span { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--section-bg); box-shadow: 0 1px 2px rgba(0, 0, 0, .18); transition: transform .15s ease; }
+.tg-translation-toggle.is-active { color: var(--accent); }
+.tg-translation-toggle.is-active .tg-translation-toggle-track { background: var(--accent); }
+.tg-translation-toggle.is-active .tg-translation-toggle-track > span { transform: translateX(12px); }
 .tg-receipt-row { position: relative; display: grid; grid-template-columns: 88px minmax(0, 1fr) 34px; gap: 8px; min-height: 94px; padding: 9px 10px; align-items: center; }
 .tg-receipt-row + .tg-receipt-row::before { content: ''; position: absolute; top: 0; right: 10px; left: 10px; height: .5px; background: var(--separator); }
-.tg-receipt-name-input { grid-column: 1 / -1; width: 100%; height: 32px; padding: 0 3px; border: 0; border-bottom: .5px solid var(--separator); outline: none; background: transparent; color: var(--text); }
+.tg-receipt-name { grid-column: 1 / -1; min-width: 0; }
+.tg-receipt-name-input { width: 100%; height: 32px; padding: 0 3px; border: 0; border-bottom: .5px solid var(--separator); outline: none; background: transparent; color: var(--text); }
 .tg-receipt-name-input:focus { border-bottom-color: var(--accent); }
 .tg-receipt-name-input::placeholder { color: var(--hint); }
 .tg-member-select { min-width: 0; height: 34px; padding: 0 8px; border: .5px solid var(--separator); border-radius: 7px; background: var(--section-bg); color: var(--text); }

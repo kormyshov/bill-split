@@ -6,6 +6,7 @@ const SUPPORTED_RECEIPT_IMAGE_TYPES = new Set(['image/jpeg', 'image/png']);
 
 export type ScannedReceiptItem = {
   name: string;
+  name_en?: string;
   price: number;
   quantity?: number;
 };

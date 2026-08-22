@@ -118,6 +118,9 @@ export default function NewExpense() {
       const positions = scannedItems.map((item, index) => ({
         id: `scan-${scanKey}-${index}`,
         name: item.quantity && item.quantity !== 1 ? `${item.name.trim()} ×${item.quantity}` : item.name.trim(),
+        nameEn: typeof item.name_en === 'string' && item.name_en.trim()
+          ? item.quantity && item.quantity !== 1 ? `${item.name_en.trim()} ×${item.quantity}` : item.name_en.trim()
+          : undefined,
         amount: item.price,
         memberId: -1,
       }));
