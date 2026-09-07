@@ -22,6 +22,8 @@ export default function AccountInfo() {
   const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isPhoneSaving, setIsPhoneSaving] = useState(false);
+  const [buyingPlan, setBuyingPlan] = useState<number | null>(null);
+  const [premiumError, setPremiumError] = useState('');
 
   const updateAccountPhone = (newPhone: string) => setAccount(new TUser(account.getId(), account.getTelegramId(), account.getFirstName(), account.getLastName(), account.getExpiredDate(), newPhone));
 
@@ -44,10 +46,15 @@ export default function AccountInfo() {
     haptic('warning');
   };
 
-  const handleBuyPremium = (stars: number, days: number) => {
+  const handleBuyPremium = async (stars: number, days: number) => {
+    if (buyingPlan !== null) return;
+
     haptic('selection');
-    createInvoiceLink(stars, days).then(link => {
-      TelegramWebApp().openInvoice(link.result, (status: string) => {
+    setBuyingPlan(days);
+    setPremiumError('');
+    try {
+      const link = await createInvoiceLink(stars, days);
+      TelegramWebApp().openInvoice(link, (status: string) => {
         if (status === 'paid') {
           paidPremium(days);
           setAccountUpdateFlag(true);
@@ -58,7 +65,12 @@ export default function AccountInfo() {
           TelegramWebApp().showPopup({ title: 'Payment not completed', message: `Payment finished with status: ${status}.`, buttons: [{ type: 'close', text: 'Close' }] });
         }
       });
-    });
+    } catch (error) {
+      setPremiumError(error instanceof Error ? error.message : 'Could not start the payment. Please try again.');
+      haptic('error');
+    } finally {
+      setBuyingPlan(null);
+    }
   };
 
   const name = personName(account.getFirstName(), account.getLastName());
@@ -96,13 +108,14 @@ export default function AccountInfo() {
         <h2 className="tg-section-title">Choose your plan</h2>
         <div className="tg-plan-grid">
           {PLANS.map((plan, index) => (
-            <button type="button" className={`tg-plan ${index === 1 ? 'is-selected' : ''}`} key={plan.days} onClick={() => handleBuyPremium(plan.stars, plan.days)}>
+            <button type="button" className={`tg-plan ${index === 1 ? 'is-selected' : ''}`} key={plan.days} disabled={buyingPlan !== null} aria-busy={buyingPlan === plan.days} onClick={() => handleBuyPremium(plan.stars, plan.days)}>
               <small>{plan.label}</small>
-              <strong><Icon name="star" size={15} /> {plan.stars}</strong>
+              <strong>{buyingPlan === plan.days ? 'Opening…' : <><Icon name="star" size={15} /> {plan.stars}</>}</strong>
               <span>Telegram Stars</span>
             </button>
           ))}
         </div>
+        {premiumError && <p className="tg-action-error" role="alert">{premiumError}</p>}
       </div>
 
       <Modal

@@ -311,6 +311,7 @@ button.tg-list-row:active { background: var(--secondary-bg); }
 .tg-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .tg-plan { position: relative; min-height: 112px; padding: 12px 5px 8px; border: .5px solid var(--separator); border-radius: 9px; background: var(--section-bg); color: var(--text); text-align: center; }
 .tg-plan.is-selected { border: 1.5px solid var(--accent); }
+.tg-plan:disabled { cursor: default; opacity: .55; }
 .tg-plan small, .tg-plan strong, .tg-plan span { display: block; }
 .tg-plan small { font-size: 11px; }
 .tg-plan strong { margin-top: 12px; font-size: 17px; }
