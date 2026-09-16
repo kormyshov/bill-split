@@ -20,8 +20,9 @@ Security and delivery:
    `secret_token` equal to `_webhook_secret(BOT_TOKEN)`, derived by
    domain-separated HMAC without printing it. It preserves `allowed_updates`
    and pending updates. The old revision ignores the extra header. After
-   observing successful registration, remove `REGISTER_WEBHOOK` and
-   `WEBHOOK_URL` and deploy another revision to disable the setup step.
+   observing successful registration, set `REGISTER_WEBHOOK=0` (or remove it)
+   and deploy another revision to disable the setup step. `WEBHOOK_URL` can
+   then be removed as well.
 2. Approve checkout only for an invoice payload signed by the invoice service,
    the same Telegram user, `XTR` and the configured Stars price. Old invoices
    with unsigned payloads must be rejected at checkout, not charged.
