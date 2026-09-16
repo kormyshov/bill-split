@@ -109,6 +109,13 @@ class InvoiceTests(unittest.TestCase):
             _, status, _ = main.create_invoice_link(Request({"days": 10, "init_data": signed_init_data()}))
         self.assertEqual(status, 503)
 
+    def test_secret_with_trailing_newline_is_normalized(self):
+        with patch.dict(os.environ, {"BOT_TOKEN": TOKEN + "\n"}), \
+             patch.object(main, "urlopen", return_value=io.BytesIO(b'{"ok":true,"result":"https://t.me/$invoice"}')) as send:
+            _, status, _ = main.create_invoice_link(Request({"days": 10, "init_data": signed_init_data()}))
+        self.assertEqual(status, 200)
+        self.assertIn(f"bot{TOKEN}/createInvoiceLink", send.call_args.args[0].full_url)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -118,16 +118,19 @@ def _deliver_payment(payment, payer_id, days, token, backend_url):
 
 @functions_framework.http
 def telegram_webhook(request):
-    token = os.environ.get("BOT_TOKEN", "")
+    token = os.environ.get("BOT_TOKEN", "").strip()
     backend_url = os.environ.get("BACKEND_PAYMENT_URL", "")
     if not token or not backend_url:
         return "", 503
     if os.environ.get("REGISTER_WEBHOOK") == "1":
         try:
             _register_webhook_once(token)
-        except (HTTPError, URLError, OSError, ValueError, TypeError):
-            # The URL in an exception may contain the bot token.
-            logger.warning("Telegram webhook registration failed")
+        except HTTPError as error:
+            # Never log the exception: its URL contains the bot token.
+            logger.warning("Telegram webhook registration HTTP status %d", error.code)
+            return "", 503
+        except (URLError, OSError, ValueError, TypeError):
+            logger.warning("Telegram webhook registration failed before HTTP success")
             return "", 503
     if request.method != "POST":
         return "", 405

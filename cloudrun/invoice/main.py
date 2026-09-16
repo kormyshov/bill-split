@@ -66,7 +66,7 @@ def _invoice_payload(user_id, days, bot_token):
 @functions_framework.http
 def create_invoice_link(request):
     allowed_origin = os.environ.get("ALLOWED_ORIGIN", "").rstrip("/")
-    bot_token = os.environ.get("BOT_TOKEN", "")
+    bot_token = os.environ.get("BOT_TOKEN", "").strip()
     origin = request.headers.get("Origin", "")
 
     if not allowed_origin or not bot_token:

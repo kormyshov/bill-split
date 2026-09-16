@@ -9,6 +9,7 @@ import sys
 import types
 import unittest
 from unittest.mock import patch
+from urllib.error import HTTPError
 
 if "functions_framework" not in sys.modules:
     sys.modules["functions_framework"] = types.SimpleNamespace(http=lambda function: function)
@@ -108,6 +109,27 @@ class WebhookTests(unittest.TestCase):
         registration = json.loads(send.call_args.args[0].data)
         self.assertEqual(registration["url"], "https://webhook.test/")
         self.assertEqual(registration["secret_token"], main._webhook_secret(TOKEN))
+
+    def test_registration_failure_logs_only_safe_status(self):
+        error = HTTPError(f"https://api.telegram.org/bot{TOKEN}/setWebhook", 401, "bad token", {}, None)
+        with patch.dict(os.environ, {"REGISTER_WEBHOOK": "1", "WEBHOOK_URL": "https://webhook.test/"}), \
+             patch.object(main, "urlopen", side_effect=error), \
+             self.assertLogs(main.logger, level="WARNING") as logs:
+            main._registered = False
+            request = Request({})
+            request.method = "GET"
+            self.assertEqual(main.telegram_webhook(request)[1], 503)
+        self.assertIn("HTTP status 401", " ".join(logs.output))
+        self.assertNotIn(TOKEN, " ".join(logs.output))
+
+    def test_secret_with_trailing_newline_uses_token_without_newline(self):
+        with patch.dict(os.environ, {"BOT_TOKEN": TOKEN + "\n", "REGISTER_WEBHOOK": "1", "WEBHOOK_URL": "https://webhook.test/"}), \
+             patch.object(main, "urlopen", return_value=io.BytesIO(b'{"ok":true}')) as send:
+            main._registered = False
+            request = Request({})
+            request.method = "GET"
+            self.assertEqual(main.telegram_webhook(request)[1], 405)
+            self.assertIn(f"bot{TOKEN}/setWebhook", send.call_args.args[0].full_url)
 
 
 if __name__ == "__main__":
