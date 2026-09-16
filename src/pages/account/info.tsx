@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { AccountContext, AccountUpdateFlagContext } from '../../app/App';
-import { createInvoiceLink, paidPremium } from '../../entities/upload/stars';
+import { createInvoiceLink } from '../../entities/upload/stars';
 import { deletePhone, setPhone } from '../../entities/upload/phone';
 import { haptic, TelegramWebApp } from '../../entities/utils/telegram';
 import { TUser } from '../../entities/types/user/user';
@@ -46,20 +46,20 @@ export default function AccountInfo() {
     haptic('warning');
   };
 
-  const handleBuyPremium = async (stars: number, days: number) => {
+  const handleBuyPremium = async (days: number) => {
     if (buyingPlan !== null) return;
 
     haptic('selection');
     setBuyingPlan(days);
     setPremiumError('');
     try {
-      const link = await createInvoiceLink(stars, days);
+      const link = await createInvoiceLink(days);
       TelegramWebApp().openInvoice(link, (status: string) => {
         if (status === 'paid') {
-          paidPremium(days);
           setAccountUpdateFlag(true);
+          [3000, 10000, 30000].forEach(delay => window.setTimeout(() => setAccountUpdateFlag(true), delay));
           haptic('success');
-          TelegramWebApp().showPopup({ title: 'Welcome to Premium', message: 'Your Bill Split Premium upgrade was successful.', buttons: [{ type: 'close', text: 'Close' }] });
+          TelegramWebApp().showPopup({ title: 'Payment received', message: 'Premium will activate shortly. Your account will update automatically.', buttons: [{ type: 'close', text: 'Close' }] });
         } else if (status !== 'cancelled') {
           haptic('error');
           TelegramWebApp().showPopup({ title: 'Payment not completed', message: `Payment finished with status: ${status}.`, buttons: [{ type: 'close', text: 'Close' }] });
@@ -108,7 +108,7 @@ export default function AccountInfo() {
         <h2 className="tg-section-title">Choose your plan</h2>
         <div className="tg-plan-grid">
           {PLANS.map((plan, index) => (
-            <button type="button" className={`tg-plan ${index === 1 ? 'is-selected' : ''}`} key={plan.days} disabled={buyingPlan !== null} aria-busy={buyingPlan === plan.days} onClick={() => handleBuyPremium(plan.stars, plan.days)}>
+            <button type="button" className={`tg-plan ${index === 1 ? 'is-selected' : ''}`} key={plan.days} disabled={buyingPlan !== null} aria-busy={buyingPlan === plan.days} onClick={() => handleBuyPremium(plan.days)}>
               <small>{plan.label}</small>
               <strong>{buyingPlan === plan.days ? 'Opening…' : <><Icon name="star" size={15} /> {plan.stars}</>}</strong>
               <span>Telegram Stars</span>

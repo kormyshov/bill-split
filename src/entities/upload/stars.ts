@@ -1,6 +1,7 @@
-import { getCommand, getRequestOptions } from "./common.ts";
+import { TelegramWebApp } from "../utils/telegram";
 
 const INVOICE_REQUEST_TIMEOUT_MS = 15_000;
+const INVOICE_ENDPOINT = 'https://bill-split-invoice-892309313274.europe-west1.run.app/';
 
 export class PremiumPurchaseError extends Error {
     status: number;
@@ -14,30 +15,25 @@ export class PremiumPurchaseError extends Error {
 
 const getInvoiceLink = (data: any): string | null => {
     const invoice = data?.invoice_link;
-    if (typeof invoice !== 'string') return null;
-
-    if (invoice.startsWith('https://t.me/')) return invoice;
-
-    try {
-        const telegramResponse = JSON.parse(invoice);
-        return telegramResponse?.ok === true && typeof telegramResponse.result === 'string'
-            ? telegramResponse.result
-            : null;
-    } catch (_) {
-        return null;
-    }
+    return typeof invoice === 'string' && invoice.startsWith('https://t.me/') ? invoice : null;
 };
 
+export const createInvoiceLink = async (days: number): Promise<string> => {
+    const initData = TelegramWebApp().initData;
+    if (!initData) {
+        throw new PremiumPurchaseError('Open Bill Split inside Telegram to buy Premium.');
+    }
 
-export const createInvoiceLink = async (stars: number, days: number): Promise<string> => {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), INVOICE_REQUEST_TIMEOUT_MS);
 
     try {
         const response = await fetch(
-            getCommand("stars/create_invoice_link"),
+            INVOICE_ENDPOINT,
             {
-                ...getRequestOptions(JSON.stringify({ stars, days })),
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ days, init_data: initData }),
                 signal: controller.signal,
             },
         );
@@ -64,14 +60,4 @@ export const createInvoiceLink = async (stars: number, days: number): Promise<st
     } finally {
         window.clearTimeout(timeout);
     }
-}
-
-export const paidPremium = (days: number) => {
-    fetch(getCommand("stars/paid_premium"), getRequestOptions(
-        JSON.stringify(
-            {
-                days: days
-            }
-        ))
-    );
 }

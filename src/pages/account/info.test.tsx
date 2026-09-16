@@ -1,10 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { AccountContext, AccountUpdateFlagContext } from '../../app/App';
 import { TUser } from '../../entities/types/user/user';
 import AccountInfo from './info';
 
 const mockCreateInvoiceLink = jest.fn();
+const mockOpenInvoice = jest.fn();
+const mockShowPopup = jest.fn();
 
 jest.mock('react-router-dom', () => ({
   Route: () => null,
@@ -19,14 +21,13 @@ jest.mock('@shoelace-style/shoelace/dist/utilities/base-path.js', () => ({
 
 jest.mock('../../entities/upload/stars', () => ({
   createInvoiceLink: (...args: unknown[]) => mockCreateInvoiceLink(...args),
-  paidPremium: jest.fn(),
 }));
 
 jest.mock('../../entities/utils/telegram', () => ({
   haptic: jest.fn(),
   TelegramWebApp: () => ({
-    openInvoice: jest.fn(),
-    showPopup: jest.fn(),
+    openInvoice: mockOpenInvoice,
+    showPopup: mockShowPopup,
   }),
 }));
 
@@ -50,4 +51,30 @@ test('shows an actionable error when an invoice cannot be created', async () => 
   fireEvent.click(screen.getByRole('button', { name: /10 days/i }));
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Premium purchase is temporarily unavailable');
+});
+
+test('waits for the payment webhook to activate Premium after a paid invoice', async () => {
+  mockCreateInvoiceLink.mockResolvedValueOnce('https://t.me/$invoice');
+  mockOpenInvoice.mockClear();
+  mockShowPopup.mockClear();
+  global.fetch = jest.fn();
+  const setAccountUpdateFlag = jest.fn();
+  const account = new TUser(1, '123', 'Test', 'User', '1900-01-01', '');
+
+  render(
+    <AccountContext.Provider value={{ account, setAccount: jest.fn() }}>
+      <AccountUpdateFlagContext.Provider value={{ accountUpdateFlag: false, setAccountUpdateFlag }}>
+        <AccountInfo />
+      </AccountUpdateFlagContext.Provider>
+    </AccountContext.Provider>,
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: /10 days/i }));
+  await waitFor(() => expect(mockOpenInvoice).toHaveBeenCalled());
+  expect(mockCreateInvoiceLink).toHaveBeenCalledWith(10);
+
+  act(() => mockOpenInvoice.mock.calls[0][1]('paid'));
+  expect(global.fetch).not.toHaveBeenCalled();
+  expect(setAccountUpdateFlag).toHaveBeenCalledWith(true);
+  expect(mockShowPopup).toHaveBeenCalledWith(expect.objectContaining({ title: 'Payment received' }));
 });

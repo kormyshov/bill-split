@@ -1,5 +1,9 @@
 import { createInvoiceLink, PremiumPurchaseError } from './stars';
 
+jest.mock('../utils/telegram', () => ({
+  TelegramWebApp: () => ({ initData: 'signed-init-data' }),
+}));
+
 describe('Premium invoices', () => {
   beforeEach(() => {
     global.fetch = jest.fn();
@@ -12,19 +16,15 @@ describe('Premium invoices', () => {
       json: async () => ({ invoice_link: 'https://t.me/$invoice' }),
     });
 
-    await expect(createInvoiceLink(49, 10)).resolves.toBe('https://t.me/$invoice');
-  });
-
-  test('keeps compatibility with the legacy nested Telegram response', async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        invoice_link: JSON.stringify({ ok: true, result: 'https://t.me/$legacy' }),
+    await expect(createInvoiceLink(10)).resolves.toBe('https://t.me/$invoice');
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://bill-split-invoice-892309313274.europe-west1.run.app/',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days: 10, init_data: 'signed-init-data' }),
       }),
-    });
-
-    await expect(createInvoiceLink(99, 30)).resolves.toBe('https://t.me/$legacy');
+    );
   });
 
   test('exposes a backend error instead of failing silently', async () => {
@@ -35,7 +35,7 @@ describe('Premium invoices', () => {
     });
 
     try {
-      await createInvoiceLink(999, 365);
+      await createInvoiceLink(365);
       throw new Error('Expected createInvoiceLink to reject');
     } catch (error) {
       expect(error).toBeInstanceOf(PremiumPurchaseError);
@@ -51,6 +51,6 @@ describe('Premium invoices', () => {
       json: async () => ({ invoice_link: '{"ok":false}' }),
     });
 
-    await expect(createInvoiceLink(49, 10)).rejects.toThrow('invalid invoice');
+    await expect(createInvoiceLink(10)).rejects.toThrow('invalid invoice');
   });
 });
