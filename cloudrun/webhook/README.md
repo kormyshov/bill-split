@@ -30,6 +30,9 @@ Security and delivery:
    JSON body to the Yandex Function. Return HTTP 200 only once it has committed
    the payment or confirmed a duplicate. Return 503 on transient errors so
    Telegram can retry. No raw updates, payment IDs or credentials are logged.
+   A signed 1-Star / 1-day canary is delivered through the same path and then
+   refunded with `refundStarPayment`; an explicit already-refunded response is
+   treated as idempotent success. Normal plans are not automatically refunded.
 4. The YDB `premium_payments` table and the backend handler must be deployed
    before this function is rolled out. The UI should be deployed after this.
 

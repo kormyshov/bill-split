@@ -13,7 +13,8 @@ from urllib.request import Request, urlopen
 import functions_framework
 
 
-PLANS = {10: 49, 30: 99, 365: 999}
+PLANS = {1: 1, 10: 49, 30: 99, 365: 999}
+CANARY_DAYS = 1
 MAX_INIT_DATA_AGE_SECONDS = 24 * 60 * 60
 TELEGRAM_TIMEOUT_SECONDS = 8
 
@@ -63,6 +64,14 @@ def _invoice_payload(user_id, days, bot_token):
     return f"{data}:{signature}"
 
 
+def _canary_allowed(user_id):
+    configured = os.environ.get("CANARY_TESTER_IDS", "")
+    return str(user_id) in {
+        value.strip() for value in configured.split(",")
+        if value.strip().isascii() and value.strip().isdecimal() and int(value.strip()) > 0
+    }
+
+
 @functions_framework.http
 def create_invoice_link(request):
     allowed_origin = os.environ.get("ALLOWED_ORIGIN", "").rstrip("/")
@@ -100,10 +109,12 @@ def create_invoice_link(request):
         user_id = _verified_user_id(body.get("init_data"), bot_token)
     except ValueError:
         return _response({"error": "Invalid Telegram authentication"}, 401, origin or None)
+    if days == CANARY_DAYS and not _canary_allowed(user_id):
+        return _response({"error": "Canary purchase is not enabled for this account"}, 403, origin or None)
 
     payload = {
-        "title": f"Premium for {days} days",
-        "description": f"Bill Split Premium for {days} days",
+        "title": "Premium canary" if days == CANARY_DAYS else f"Premium for {days} days",
+        "description": "Refundable Bill Split payment canary" if days == CANARY_DAYS else f"Bill Split Premium for {days} days",
         "payload": _invoice_payload(user_id, days, bot_token),
         "provider_token": "",
         "currency": "XTR",

@@ -75,6 +75,22 @@ class InvoiceTests(unittest.TestCase):
                 self.assertEqual(status, 400)
                 send.assert_not_called()
 
+    def test_canary_requires_server_allowlist_and_uses_one_star(self):
+        body = {"days": 1, "init_data": signed_init_data()}
+        with patch.object(main, "urlopen") as send:
+            response, status, _ = main.create_invoice_link(Request(body))
+        self.assertEqual(status, 403)
+        self.assertIn("not enabled", response)
+        send.assert_not_called()
+
+        with patch.dict(os.environ, {"CANARY_TESTER_IDS": "7, 42"}), \
+             patch.object(main, "urlopen", return_value=io.BytesIO(b'{"ok":true,"result":"https://t.me/$invoice"}')) as send:
+            _, status, _ = main.create_invoice_link(Request(body))
+        self.assertEqual(status, 200)
+        invoice = json.loads(send.call_args.args[0].data)
+        self.assertEqual(invoice["prices"], [{"label": "Premium", "amount": 1}])
+        self.assertEqual(invoice["title"], "Premium canary")
+
     def test_rejects_forged_or_expired_telegram_identity(self):
         for init_data in (signed_init_data().replace("42", "43"), signed_init_data(auth_date=int(time.time()) - 90000), "hash=invalid&user=%7B%7D"):
             with self.subTest(init_data=init_data), patch.object(main, "urlopen") as send:

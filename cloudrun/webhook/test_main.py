@@ -84,6 +84,41 @@ class WebhookTests(unittest.TestCase):
         expected = hmac.new(key, timestamp.encode() + b"." + request.data, hashlib.sha256).hexdigest()
         self.assertEqual(request.get_header("X-bill-split-signature"), expected)
 
+    def test_canary_is_delivered_then_refunded(self):
+        update = {"message": {"from": {"id": 42}, "successful_payment": payment(days=1)}}
+
+        class Response(io.BytesIO):
+            status = 200
+
+        responses = [Response(b'{"ok":true}'), io.BytesIO(b'{"ok":true,"result":true}')]
+        with patch.object(main, "urlopen", side_effect=responses) as send:
+            self.assertEqual(main.telegram_webhook(Request(update))[1], 200)
+
+        self.assertEqual(send.call_count, 2)
+        refund = send.call_args_list[1].args[0]
+        self.assertTrue(refund.full_url.endswith("/refundStarPayment"))
+        self.assertEqual(json.loads(refund.data), {
+            "user_id": 42,
+            "telegram_payment_charge_id": "unique-charge",
+        })
+
+    def test_canary_refund_is_idempotent_and_transient_failures_retry(self):
+        update = {"message": {"from": {"id": 42}, "successful_payment": payment(days=1)}}
+
+        class Response(io.BytesIO):
+            status = 200
+
+        already_refunded = HTTPError(
+            f"https://api.telegram.org/bot{TOKEN}/refundStarPayment",
+            400, "bad request", {},
+            io.BytesIO(b'{"ok":false,"description":"Bad Request: CHARGE_ALREADY_REFUNDED"}'),
+        )
+        with patch.object(main, "urlopen", side_effect=[Response(b'{"ok":true}'), already_refunded]):
+            self.assertEqual(main.telegram_webhook(Request(update))[1], 200)
+
+        with patch.object(main, "urlopen", side_effect=[Response(b'{"ok":true}'), OSError("offline")]):
+            self.assertEqual(main.telegram_webhook(Request(update))[1], 503)
+
     def test_rejects_forged_webhook_without_contacting_backend(self):
         update = {"message": {"from": {"id": 42}, "successful_payment": payment()}}
         with patch.object(main, "urlopen") as send:

@@ -13,6 +13,7 @@ const PLANS = [
   { label: '1 month', stars: 99, days: 30 },
   { label: '1 year', stars: 999, days: 365 },
 ];
+const CANARY_PLAN = { label: 'Canary · 1 day', stars: 1, days: 1 };
 
 export default function AccountInfo() {
   const navigate = useNavigate();
@@ -24,6 +25,8 @@ export default function AccountInfo() {
   const [isPhoneSaving, setIsPhoneSaving] = useState(false);
   const [buyingPlan, setBuyingPlan] = useState<number | null>(null);
   const [premiumError, setPremiumError] = useState('');
+  const canaryEnabled = TelegramWebApp().initDataUnsafe?.start_param === 'canary';
+  const visiblePlans = canaryEnabled ? [CANARY_PLAN, ...PLANS] : PLANS;
 
   const updateAccountPhone = (newPhone: string) => setAccount(new TUser(account.getId(), account.getTelegramId(), account.getFirstName(), account.getLastName(), account.getExpiredDate(), newPhone));
 
@@ -59,7 +62,13 @@ export default function AccountInfo() {
           setAccountUpdateFlag(true);
           [3000, 10000, 30000].forEach(delay => window.setTimeout(() => setAccountUpdateFlag(true), delay));
           haptic('success');
-          TelegramWebApp().showPopup({ title: 'Payment received', message: 'Premium will activate shortly. Your account will update automatically.', buttons: [{ type: 'close', text: 'Close' }] });
+          TelegramWebApp().showPopup({
+            title: days === CANARY_PLAN.days ? 'Canary payment received' : 'Payment received',
+            message: days === CANARY_PLAN.days
+              ? 'Premium will activate shortly. The test Star will be refunded automatically.'
+              : 'Premium will activate shortly. Your account will update automatically.',
+            buttons: [{ type: 'close', text: 'Close' }],
+          });
         } else if (status !== 'cancelled') {
           haptic('error');
           TelegramWebApp().showPopup({ title: 'Payment not completed', message: `Payment finished with status: ${status}.`, buttons: [{ type: 'close', text: 'Close' }] });
@@ -107,8 +116,8 @@ export default function AccountInfo() {
 
         <h2 className="tg-section-title">Choose your plan</h2>
         <div className="tg-plan-grid">
-          {PLANS.map((plan, index) => (
-            <button type="button" className={`tg-plan ${index === 1 ? 'is-selected' : ''}`} key={plan.days} disabled={buyingPlan !== null} aria-busy={buyingPlan === plan.days} onClick={() => handleBuyPremium(plan.days)}>
+          {visiblePlans.map(plan => (
+            <button type="button" className={`tg-plan ${plan.days === 30 ? 'is-selected' : ''}`} key={plan.days} disabled={buyingPlan !== null} aria-busy={buyingPlan === plan.days} onClick={() => handleBuyPremium(plan.days)}>
               <small>{plan.label}</small>
               <strong>{buyingPlan === plan.days ? 'Opening…' : <><Icon name="star" size={15} /> {plan.stars}</>}</strong>
               <span>Telegram Stars</span>

@@ -13,7 +13,8 @@ from urllib.request import Request, urlopen
 import functions_framework
 
 
-PLANS = {10: 49, 30: 99, 365: 999}
+PLANS = {1: 1, 10: 49, 30: 99, 365: 999}
+CANARY_DAYS = 1
 TELEGRAM_TIMEOUT_SECONDS = 4
 BACKEND_TIMEOUT_SECONDS = 8
 logger = logging.getLogger(__name__)
@@ -116,6 +117,34 @@ def _deliver_payment(payment, payer_id, days, token, backend_url):
             raise ValueError("Payment storage failed")
 
 
+def _refund_canary(payment, payer_id, token):
+    body = json.dumps({
+        "user_id": payer_id,
+        "telegram_payment_charge_id": payment["telegram_payment_charge_id"],
+    }).encode("utf-8")
+    request = Request(
+        f"https://api.telegram.org/bot{token}/refundStarPayment",
+        data=body, headers={"Content-Type": "application/json"}, method="POST",
+    )
+    try:
+        with urlopen(request, timeout=TELEGRAM_TIMEOUT_SECONDS) as response:
+            answer = json.loads(response.read(4096))
+    except HTTPError as error:
+        # Telegram may redeliver successful_payment after a completed refund.
+        # Treat only its explicit already-refunded response as idempotent success.
+        try:
+            answer = json.loads(error.read(4096))
+            description = answer.get("description", "") if isinstance(answer, dict) else ""
+        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+            description = ""
+        normalized = description.upper().replace(" ", "_")
+        if error.code == 400 and "ALREADY_REFUNDED" in normalized:
+            return
+        raise
+    if not isinstance(answer, dict) or answer.get("ok") is not True or answer.get("result") is not True:
+        raise ValueError("Telegram rejected canary refund")
+
+
 @functions_framework.http
 def telegram_webhook(request):
     token = os.environ.get("BOT_TOKEN", "").strip()
@@ -181,6 +210,12 @@ def telegram_webhook(request):
             # Retry the Telegram update until the YDB transaction succeeds.
             logger.warning("Premium payment delivery failed; requesting retry")
             return "", 503
+        if days == CANARY_DAYS:
+            try:
+                _refund_canary(payment, payer_id, token)
+            except (HTTPError, URLError, OSError, ValueError, TypeError):
+                logger.warning("Canary refund failed; requesting retry")
+                return "", 503
         return "", 200
 
     return "", 200

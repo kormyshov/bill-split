@@ -5,11 +5,13 @@ This Cloud Run function only creates Telegram Stars invoice links. The sibling
 activates Premium after validating its authenticated delivery.
 
 - Runtime: Python 3.14; entry point: `create_invoice_link` in `main.py`.
-- Request: `POST` JSON `{ "days": 10 | 30 | 365, "init_data": "<Telegram.WebApp.initData>" }`.
+- Request: `POST` JSON `{ "days": 1 | 10 | 30 | 365, "init_data": "<Telegram.WebApp.initData>" }`.
 - Success: `200` JSON `{ "invoice_link": "https://t.me/..." }`.
 - Configuration: `BOT_TOKEN` from Secret Manager secret `bill-split-bot-token`,
-  version `1` (the existing bot token, not checked into source);
-  `ALLOWED_ORIGIN=https://bill-split-index.website.yandexcloud.net`.
+  version `2` (the existing bot token, not checked into source);
+  `ALLOWED_ORIGIN=https://bill-split-index.website.yandexcloud.net`;
+  optional `CANARY_TESTER_IDS` contains comma-separated Telegram user IDs that
+  may create the hidden refundable 1-Star / 1-day canary invoice.
 - Deployment: separate service `bill-split-invoice` in `europe-west1`,
   URL `https://bill-split-invoice-892309313274.europe-west1.run.app/`,
   request-based billing, minimum instances 0, maximum instances 3, request
@@ -28,6 +30,11 @@ Premium. The frontend change to use this service is staged locally; do not
 deploy it until the webhook verifies and records `successful_payment` and
 activates Premium idempotently. A paid invoice callback is not proof of
 server-side activation.
+
+The canary plan is requested with `days=1`. It is rejected unless the verified
+Telegram user is in `CANARY_TESTER_IDS`; the webhook delivers it through the
+normal ledger and Premium path, then calls `refundStarPayment`. Ordinary plans
+are never automatically refunded.
 
 Deployment smoke checks (2026-09-16): the public service responds with `405`
 to GET, `204` to CORS preflight from `ALLOWED_ORIGIN`, `401` to an unsigned
