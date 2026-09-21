@@ -15,7 +15,11 @@ export default function GroupList() {
 
   useEffect(() => {
     const param = TelegramWebApp().initDataUnsafe.start_param;
-    if (param) navigate(`/connect/${param}`, { replace: true });
+    if (param === 'canary') {
+      navigate('/account/info', { replace: true });
+    } else if (param) {
+      navigate(`/connect/${param}`, { replace: true });
+    }
   }, [navigate]);
 
   const groups = groupList.getItems();
